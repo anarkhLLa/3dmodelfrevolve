@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16161a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planning">
+<title>Planning</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f3f3f6; --surface:#ffffff; --surface2:#ebebf0; --text:#17171c; --muted:#6a6a75; --line:#d8d8e0;
+  --accent:#2563eb; --accent-soft:#2563eb14;
+  --red:#ef4444; --orange:#f97316; --yellow:#facc15; --white:#ffffff; --green:#22c55e; --violet:#8b5cf6;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0e11; --surface:#18181d; --surface2:#24242b; --text:#f2f2f5; --muted:#9b9ba7; --line:#2d2d36;
+    --accent:#60a5fa; --accent-soft:#60a5fa1c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0e11; --surface:#18181d; --surface2:#24242b; --text:#f2f2f5; --muted:#9b9ba7; --line:#2d2d36;
+  --accent:#60a5fa; --accent-soft:#60a5fa1c; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+button{font:inherit;color:inherit}
+small,.muted{color:var(--muted)}
+
+/* Header + fenêtre attentes */
+header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
+  padding:calc(env(safe-area-inset-top) + 6px) 12px 8px}
+.bar{display:flex;align-items:center;gap:8px;min-height:40px}
+.bar h1{font-size:20px;margin:0;flex:1;letter-spacing:-.01em}
+.seg{display:flex;align-items:center;background:var(--surface2);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:none;padding:7px 10px;font-weight:600;min-width:34px;cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+.seg-l{font-size:13px;font-weight:600;padding:0 2px;white-space:nowrap}
+
+.waits{margin-top:8px;border-radius:12px;background:var(--surface2);font-size:13px;border:1px solid transparent}
+.waits.alert{background:#f9731618;border-color:var(--orange)}
+.waits-h{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer}
+.waits-h b{white-space:nowrap}
+.waits-hot{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.waits.alert .waits-hot{color:var(--orange);font-weight:700}
+.waits-body{padding:0 10px 10px;max-height:45dvh;overflow:auto}
+.w-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.w-row .w-txt{flex:1;min-width:0}
+.w-row .w-txt b{display:block;overflow-wrap:anywhere}
+.w-row.today .w-when{color:var(--orange);font-weight:700}
+.w-row.late .w-when{color:var(--red);font-weight:700}
+.w-add{display:grid;grid-template-columns:1fr auto;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
+.w-add input[name=title]{grid-column:1/-1}
+
+main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:10px 0 96px;overscroll-behavior:contain}
+nav{display:flex;background:var(--surface);border-top:1px solid var(--line);flex:none;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:11px;font-weight:600;color:var(--muted);cursor:pointer}
+nav button i{font-style:normal;font-size:19px;line-height:1}
+nav button.on{color:var(--accent)}
+#fab{position:fixed;right:16px;bottom:calc(68px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;
+  border:0;background:var(--accent);color:#fff;font-size:30px;line-height:1;box-shadow:0 6px 18px #0004;z-index:20;cursor:pointer}
+
+/* Tâches */
+.task{position:relative;border-radius:8px;padding:6px 8px;margin:0 0 5px;font-size:13.5px;font-weight:600;
+  border:1px solid transparent;overflow-wrap:anywhere;cursor:pointer;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.t-sub{display:block;font-size:11.5px;font-weight:500;opacity:.92;margin-top:1px}
+.p-red{background:var(--red);color:#fff}
+.p-orange{background:var(--orange);color:#fff}
+.p-yellow{background:var(--yellow);color:#1b1b1b}
+.p-white{background:#fff;color:#1b1b1b;border-color:#c9c9d2}
+.c-done{background:var(--green);color:#fff}
+.c-done .t-title::before{content:"✓ "}
+.c-blocked{background:var(--violet);color:#fff}
+.c-cancel{background:var(--surface2);color:var(--muted);border-left:5px solid var(--muted)}
+.c-cancel .t-title{text-decoration:line-through}
+.c-cancel[data-p=red]{border-left-color:var(--red)} .c-cancel[data-p=orange]{border-left-color:var(--orange)}
+.c-cancel[data-p=yellow]{border-left-color:var(--yellow)} .c-cancel[data-p=white]{border-left-color:#c9c9d2}
+.task.late{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--red)}
+.pdot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:1px;margin-right:5px;border:1px solid #0003}
+.pdot[data-p=red]{background:var(--red)} .pdot[data-p=orange]{background:var(--orange)}
+.pdot[data-p=yellow]{background:var(--yellow)} .pdot[data-p=white]{background:#fff}
+
+/* Planning */
+.banner{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:0 8px 10px;padding:8px 10px;border-radius:12px;
+  background:#ef444418;border:1px solid var(--red);font-size:13px;font-weight:700;color:var(--red)}
+.tray{margin:0 8px 10px;background:var(--surface);border:1.5px dashed var(--line);border-radius:12px;padding:8px}
+.tray-h{display:flex;justify-content:space-between;cursor:pointer;font-size:13px}
+.tray .tasks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tray .task{margin:0;max-width:100%}
+.tray.over,.day.over{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.empty{font-size:12px;color:var(--muted)}
+.board{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 4px;scrollbar-width:thin}
+body.dragging .board{scroll-snap-type:none}
+.week{flex:0 0 var(--colw);min-width:0;scroll-snap-align:start;padding:0 4px}
+.week-h{padding:2px 4px 8px;display:flex;flex-direction:column}
+.week-h b{font-size:14px}
+.week-h small{font-size:11.5px}
+.week.cur .week-h b{color:var(--accent)}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;padding:6px 6px 1px;min-height:62px}
+.day.we{background:color-mix(in srgb,var(--surface) 85%,var(--surface2))}
+.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.day.past{opacity:.72}
+.day-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.day.today .day-h{color:var(--accent)}
+.day-h .add{border:0;background:var(--surface2);border-radius:7px;width:26px;height:22px;line-height:1;font-size:16px;cursor:pointer;color:var(--muted)}
+.day .tasks{min-height:18px}
+.day-wait{font-size:11.5px;font-weight:700;color:var(--orange);padding:2px 2px 6px;cursor:pointer}
+.drop-line{height:3px;border-radius:2px;background:var(--accent);margin:0 0 5px}
+.tray .drop-line{display:none}
+.ghost{position:fixed;z-index:100;pointer-events:none;margin:0;transform:rotate(2deg) scale(1.05);box-shadow:0 10px 26px #0006;opacity:.95}
+.task.drag-src{opacity:.3}
+
+/* Liste des tâches */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:none}
+.chip{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.chip .n{opacity:.6;margin-left:4px}
+.search{margin:0 12px 10px}
+.group{margin:0 12px 14px}
+.group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:6px 0 6px;display:flex;align-items:center;gap:6px}
+.group h3 .sw{width:12px;height:12px;border-radius:4px;border:1px solid #0002}
+.group .task{padding:9px 11px;font-size:14.5px;margin-bottom:6px}
+.meta{display:block;font-size:12px;font-weight:500;opacity:.85;margin-top:2px}
+
+/* Sheet */
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet.hidden{display:none}
+.sheet-bg{position:absolute;inset:0;background:#0009}
+.sheet-panel{position:relative;background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;
+  padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto;animation:up .16s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.5}}
+.sheet-panel h3{margin:0 0 10px;font-size:17px}
+.sheet-panel h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sh-head .task{font-size:16px;padding:10px 12px;cursor:default}
+.note{white-space:pre-wrap;background:var(--surface2);border-radius:10px;padding:8px 10px;margin:8px 0 0;font-size:14px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface2);border-radius:11px;padding:11px 12px;font-weight:650;cursor:pointer;text-align:center}
+.btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+.btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+.btn.ok{background:var(--green);border-color:transparent;color:#fff}
+.btn.violet{background:var(--violet);border-color:transparent;color:#fff}
+.btn.danger{color:var(--red)}
+.btn.full{width:100%;display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.row > *{flex:1}
+.blk{background:#8b5cf61f;border:1px solid var(--violet);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-weight:600}
+.prio-pick{display:flex;gap:10px}
+.prio-pick label{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);cursor:pointer;flex:1}
+.prio-pick .circle,.prio-pick button{width:40px;height:40px;border-radius:50%;border:2px solid #0002;display:block;cursor:pointer;padding:0}
+.prio-pick input{position:absolute;opacity:0;pointer-events:none}
+.prio-pick input:checked + .circle,.prio-pick button.on{outline:3px solid var(--accent);outline-offset:2px}
+.cat-pick{display:flex;flex-wrap:wrap;gap:6px}
+.cat-pick input{position:absolute;opacity:0;pointer-events:none}
+.cat-pick span{display:block;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13.5px;font-weight:600;cursor:pointer}
+.cat-pick input:checked + span{background:var(--text);color:var(--bg);border-color:var(--text)}
+.lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+input,textarea,select{font:inherit;font-size:16px;width:100%;padding:10px 11px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+textarea{min-height:70px;resize:vertical}
+label.chk{display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:600}
+label.chk input{width:auto}
+.date-l{display:flex;align-items:center;gap:8px;font-weight:650}
+
+/* Réglages */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 12px 12px;padding:12px}
+.card h3{margin:0 0 6px;font-size:15px}
+.card p{margin:4px 0 10px;font-size:13.5px;color:var(--muted)}
+.card .btn{margin:0 6px 6px 0}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:13.5px}
+.legend .task{margin:0;padding:3px 10px;cursor:default}
+
+#toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;
+  background:var(--text);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600;
+  display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px #0005}
+#toast.show{display:flex}
+#toast button{border:0;background:none;color:var(--accent);font-weight:800;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar"><h1 id="viewTitle">Planning</h1><div id="headerTools" style="display:flex;gap:6px"></div></div>
+  <div id="waits" class="waits"></div>
+</header>
+<main id="main"></main>
+<nav id="tabs">
+  <button data-act="view" data-view="planning"><i>📅</i>Planning</button>
+  <button data-act="view" data-view="tasks"><i>☰</i>Tâches</button>
+  <button data-act="view" data-view="settings"><i>⚙︎</i>Réglages</button>
+</nav>
+<button id="fab" data-act="new" aria-label="Nouvelle tâche">+</button>
+<div id="sheet" class="sheet hidden"><div class="sheet-bg" data-act="close"></div><div class="sheet-panel" id="sheetPanel"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ---------- utilitaires ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+const today = () => iso(new Date());
+const monday = s => { const d = parse(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return iso(d); };
+const diffDays = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const fmtShort = s => { const d = parse(s); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; };
+const dayName = s => DAYS[(parse(s).getDay() + 6) % 7];
+function fmtRel(s) {
+  const t = today();
+  if (s === t) return "aujourd'hui";
+  if (s === addDays(t, 1)) return 'demain';
+  if (s === addDays(t, -1)) return 'hier';
+  return `${dayName(s)} ${fmtShort(s)}`;
+}
+function weekNo(s) {
+  const d = parse(s); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const w1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - w1) / 864e5 - 3 + (w1.getDay() + 6) % 7) / 7);
+}
+
+const PRIOS = [['red', 'Urgent'], ['orange', 'Important'], ['yellow', 'Normal'], ['white', 'Faible']];
+const PRIO_RANK = { red: 0, orange: 1, yellow: 2, white: 3 };
+const CATS = ['Projet', 'Pièce client', 'Vente', 'Autre'];
+const KEY = 'planning.v1';
+
+/* ---------- état ---------- */
+function defaults() {
+  return { tasks: [], waits: [], settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+}
+function load() {
+  const d = defaults();
+  try {
+    const x = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); }
+  } catch (e) {}
+  return d;
+}
+let S = load();
+let ui = { q: '', cur: null };
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  persistForSW(); queueNotify();
+}
+const find = id => S.tasks.find(t => t.id === id);
+const isActive = t => t.status === 'todo' || t.status === 'blocked';
+const isLate = t => isActive(t) && t.date && t.date < today();
+const byPrio = (a, b) => PRIO_RANK[a.prio] - PRIO_RANK[b.prio] || (a.date || '9').localeCompare(b.date || '9') || a.created - b.created;
+const waitFor = t => t.block && t.block.waitId ? S.waits.find(w => w.id === t.block.waitId) : null;
+function tasksOn(day) {
+  return S.tasks.filter(t => t.date === day).sort((a, b) =>
+    (!isActive(a)) - (!isActive(b)) || (a.order ?? 0) - (b.order ?? 0) || byPrio(a, b));
+}
+function nextOrder(day) { return Math.max(0, ...S.tasks.filter(t => t.date === day).map(t => (t.order ?? 0) + 1)); }
+
+/* ---------- rendu ---------- */
+function render(keepScroll = true) {
+  const main = $('#main'), st = main.scrollTop, bl = $('.board')?.scrollLeft;
+  document.documentElement.dataset.theme = S.settings.theme === 'auto' ? '' : S.settings.theme;
+  if (S.settings.theme === 'auto') document.documentElement.removeAttribute('data-theme');
+  const v = S.settings.view;
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  $('#fab').style.display = v === 'settings' ? 'none' : '';
+  renderWaits();
+  if (v === 'planning') renderPlanning(); else if (v === 'tasks') renderTasks(); else renderSettings();
+  if (keepScroll) { main.scrollTop = st; if (bl != null && $('.board')) $('.board').scrollLeft = bl; }
+}
+
+function chip(t, full) {
+  const cls = t.status === 'done' ? 'c-done' : t.status === 'blocked' ? 'c-blocked' : t.status === 'cancelled' ? 'c-cancel' : 'p-' + t.prio;
+  let sub = '';
+  if (t.status === 'blocked') {
+    const w = waitFor(t);
+    sub += `<span class="t-sub">⏳ ${esc(t.block?.reason || 'En attente')}${w && w.date ? ' · ' + fmtRel(w.date) : ''}</span>`;
+  }
+  if (isLate(t) && !full) sub += `<span class="t-sub">⚠ en retard (${fmtRel(t.date)})</span>`;
+  let meta = '';
+  if (full) {
+    const dot = t.status !== 'todo' ? `<i class="pdot" data-p="${t.prio}"></i>` : '';
+    const when = t.date ? (isLate(t) ? `⚠ en retard · ${fmtRel(t.date)}` : fmtRel(t.date)) : 'non planifiée';
+    meta = `<span class="meta">${dot}${esc(t.cat)} · ${when}</span>`;
+  }
+  return `<div class="task ${cls}${isLate(t) ? ' late' : ''}" data-id="${t.id}" data-p="${t.prio}"><span class="t-title">${esc(t.title)}</span>${sub}${meta}</div>`;
+}
+
+function renderPlanning() {
+  const t = today(), n = S.settings.weeks, off = S.settings.offset, m0 = monday(t);
+  const base = addDays(m0, off * 7);
+  $('#viewTitle').textContent = 'Planning';
+  $('#headerTools').innerHTML = `
+    <div class="seg"><button data-act="wk-" aria-label="Semaine précédente">‹</button><button data-act="wk0" class="${off === 0 ? 'on' : ''}">Auj.</button><button data-act="wk+" aria-label="Semaine suivante">›</button></div>
+    <div class="seg"><button data-act="n-" aria-label="Moins de semaines">−</button><span class="seg-l">${n} sem.</span><button data-act="n+" aria-label="Plus de semaines">+</button></div>`;
+  let h = '';
+  const late = S.tasks.filter(isLate);
+  if (late.length) h += `<div class="banner"><span>⚠ ${late.length} tâche${late.length > 1 ? 's' : ''} en retard</span><button class="btn sm" data-act="late-today">Tout mettre à aujourd'hui</button></div>`;
+  const unpl = S.tasks.filter(x => !x.date && isActive(x)).sort(byPrio);
+  h += `<section class="tray" data-drop="none"><div class="tray-h" data-act="tray"><b>À planifier (${unpl.length})</b><span>${S.settings.trayOpen ? '▾' : '▸'}</span></div>`;
+  if (S.settings.trayOpen) h += `<div class="tasks">${unpl.map(x => chip(x)).join('') || '<span class="empty">Rien à planifier. Glisse une tâche ici pour la retirer du planning.</span>'}</div>`;
+  h += `</section><div class="board" style="--colw:max(calc(100% / ${n}), 148px)">`;
+  for (let w = 0; w < n; w++) {
+    const ws = addDays(base, w * 7), we = addDays(ws, 6);
+    const label = ws === m0 ? 'Cette semaine' : ws === addDays(m0, 7) ? 'Semaine prochaine' : ws === addDays(m0, -7) ? 'Semaine dernière' : `Semaine ${weekNo(ws)}`;
+    h += `<div class="week${ws === m0 ? ' cur' : ''}"><div class="week-h"><b>${label}</b><small>S${weekNo(ws)} · ${fmtShort(ws)} → ${fmtShort(we)}</small></div>`;
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(ws, d);
+      const waits = S.waits.filter(x => x.date === day);
+      h += `<div class="day${day === t ? ' today' : ''}${day < t ? ' past' : ''}${d >= 5 ? ' we' : ''}" data-drop="${day}">
+        <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span><button class="add" data-act="add-day" data-day="${day}" aria-label="Ajouter une tâche">+</button></div>
+        <div class="tasks">${tasksOn(day).map(x => chip(x)).join('')}</div>
+        ${waits.map(x => `<div class="day-wait" data-act="waits-open">📦 ${esc(x.title)}</div>`).join('')}
+      </div>`;
+    }
+    h += '</div>';
+  }
+  $('#main').innerHTML = h + '</div>';
+}
+
+const FILTERS = [['active', 'À faire'], ['blocked', 'Bloquées'], ['done', 'Terminées'], ['cancelled', 'Barrées'], ['all', 'Toutes']];
+function renderTasks() {
+  $('#viewTitle').textContent = 'Toutes les tâches';
+  $('#headerTools').innerHTML = '';
+  const f = S.settings.filter, c = S.settings.cat;
+  const inCat = S.tasks.filter(t => !c || t.cat === c);
+  const count = k => inCat.filter(t => k === 'all' || (k === 'active' ? isActive(t) : t.status === k)).length;
+  $('#main').innerHTML = `
+    <div class="chips">${FILTERS.map(([k, l]) => `<button class="chip${f === k ? ' on' : ''}" data-act="filter" data-v="${k}">${l}<span class="n">${count(k)}</span></button>`).join('')}</div>
+    <div class="chips">${['', ...CATS].map(k => `<button class="chip${c === k ? ' on' : ''}" data-act="cat" data-v="${esc(k)}">${k || 'Toutes catégories'}</button>`).join('')}</div>
+    <div class="search"><input id="q" type="search" placeholder="Rechercher…" value="${esc(ui.q)}"></div>
+    <div id="taskList">${listHTML()}</div>`;
+}
+function listHTML() {
+  const f = S.settings.filter, c = S.settings.cat, q = ui.q.trim().toLowerCase();
+  const all = S.tasks.filter(t => (!c || t.cat === c) && (!q || (t.title + ' ' + (t.note || '')).toLowerCase().includes(q)));
+  const byDate = (a, b) => (a.date || '9').localeCompare(b.date || '9') || a.created - b.created;
+  const groups = [];
+  if (f === 'active' || f === 'all') {
+    for (const [k, l] of PRIOS) groups.push([l, `var(--${k === 'white' ? 'white' : k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
+  }
+  if (['active', 'blocked', 'all'].includes(f)) groups.push(['Bloquées / en attente', 'var(--violet)', all.filter(t => t.status === 'blocked').sort(byPrio)]);
+  if (f === 'done' || f === 'all') groups.push(['Terminées', 'var(--green)', all.filter(t => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))]);
+  if (f === 'cancelled' || f === 'all') groups.push(['Barrées', 'var(--surface2)', all.filter(t => t.status === 'cancelled').sort(byPrio)]);
+  const html = groups.filter(g => g[2].length).map(([l, col, ts]) =>
+    `<div class="group"><h3><span class="sw" style="background:${col}"></span>${l} · ${ts.length}</h3>${ts.map(t => chip(t, true)).join('')}</div>`).join('');
+  return html || `<p class="empty" style="text-align:center;padding:30px 20px">Aucune tâche ici.<br>Touche <b>+</b> pour en ajouter une.</p>`;
+}
+
+function waitWhen(w) {
+  if (!w.date) return ['', 'date inconnue'];
+  const d = diffDays(today(), w.date);
+  if (d < 0) return ['late', `en retard · prévu ${fmtRel(w.date)}`];
+  if (d === 0) return ['today', "arrive aujourd'hui"];
+  if (d === 1) return ['', 'demain'];
+  return ['', `dans ${d} j · ${dayName(w.date)} ${fmtShort(w.date)}`];
+}
+function renderWaits() {
+  const t = today(), open = S.settings.waitsOpen;
+  const ws = S.waits.slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'));
+  const hot = ws.filter(w => w.date && w.date <= t);
+  let line;
+  if (hot.length) line = hot.map(w => `${esc(w.title)} : ${w.date === t ? "arrive aujourd'hui" : 'en retard'}`).join(' · ');
+  else if (ws.length) line = `Prochaine : ${esc(ws[0].title)}${ws[0].date ? ' · ' + fmtRel(ws[0].date) : ''}`;
+  else line = 'Rien en attente';
+  const el = $('#waits');
+  el.className = 'waits' + (hot.length ? ' alert' : '');
+  let h = `<div class="waits-h" data-act="waits"><b>📦 Attentes${ws.length ? ` (${ws.length})` : ''}</b><span class="waits-hot">${line}</span><span>${open ? '▴' : '▾'}</span></div>`;
+  if (open) {
+    h += '<div class="waits-body">' + ws.map(w => {
+      const [cls, when] = waitWhen(w); const task = w.taskId && find(w.taskId);
+      return `<div class="w-row ${cls}"><div class="w-txt"><b>${esc(w.title)}</b><small class="w-when">${when}</small>${task ? `<small> · bloque « ${esc(task.title)} »</small>` : ''}</div>
+        <button class="btn sm ok" data-act="w-ok" data-id="${w.id}">✓ Reçu</button><button class="btn sm" data-act="w-del" data-id="${w.id}" aria-label="Supprimer">✕</button></div>`;
+    }).join('') + `<form id="wForm" class="w-add"><input name="title" placeholder="Colis, pièce, outil, paiement…" required><input type="date" name="date" value="${addDays(t, 1)}"><button class="btn primary">Ajouter</button></form></div>`;
+  }
+  el.innerHTML = h;
+}
+
+function renderSettings() {
+  $('#viewTitle').textContent = 'Réglages';
+  $('#headerTools').innerHTML = '';
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  const permTxt = { granted: '✅ Activées', denied: '⛔ Bloquées dans les réglages du navigateur', default: 'Pas encore activées', unsupported: '⚠ Non disponibles ici' }[perm];
+  $('#main').innerHTML = `
+  <div class="card"><h3>🔔 Notifications</h3>
+    <p>Une notification résume en permanence les tâches du jour, celles en retard et les colis attendus. Elle se met à jour à chaque ouverture de l'app et à chaque changement.<br><b>${permTxt}</b></p>
+    <button class="btn primary" data-act="notif-on">Activer</button><button class="btn" data-act="notif-test">Tester</button>
+    <p style="margin-top:6px">Sur iPhone : ouvrir dans Safari → Partager → « Sur l'écran d'accueil », puis activer depuis l'app installée. Sur Android : menu Chrome → « Installer l'application ».</p></div>
+  <div class="card"><h3>🎨 Couleurs</h3><div class="legend">
+    <span class="task p-red">Rouge</span><span>Urgent</span>
+    <span class="task p-orange">Orange</span><span>Important</span>
+    <span class="task p-yellow">Jaune</span><span>Normal</span>
+    <span class="task p-white">Blanc</span><span>Faible</span>
+    <span class="task c-done"><span class="t-title">Vert</span></span><span>Terminée</span>
+    <span class="task c-blocked">Violet</span><span>Bloquée (en attente de quelque chose)</span>
+    <span class="task c-cancel" data-p="orange"><span class="t-title">Barrée</span></span><span>Abandonnée</span></div>
+    <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter ou la bloquer.</p></div>
+  <div class="card"><h3>Thème</h3>
+    <div class="seg" style="display:inline-flex">${[['auto', 'Auto'], ['light', 'Clair'], ['dark', 'Sombre']].map(([k, l]) => `<button data-act="theme" data-v="${k}" class="${S.settings.theme === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+  <div class="card"><h3>💾 Sauvegarde</h3>
+    <p>Les données restent sur ce téléphone. Exporte un fichier de temps en temps pour ne rien perdre.</p>
+    <button class="btn" data-act="export">Exporter</button><label class="btn">Importer<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+    <button class="btn danger" data-act="purge">Effacer terminées et barrées</button></div>`;
+}
+
+/* ---------- bottom sheet ---------- */
+function openSheet(html) { $('#sheetPanel').innerHTML = html; $('#sheet').classList.remove('hidden'); }
+function closeSheet() { $('#sheet').classList.add('hidden'); ui.cur = null; }
+const B = (act, label, cls = '', extra = '') => `<button class="btn ${cls}" data-act="${act}" ${extra}>${label}</button>`;
+
+function openTask(id) {
+  const t = find(id); if (!t) return; ui.cur = id;
+  const w = waitFor(t);
+  openSheet(`
+    <div class="sh-head">${chip(t)}<div class="muted" style="margin-top:6px;font-size:13px">${esc(t.cat)} · ${t.date ? fmtRel(t.date) : 'non planifiée'}</div>
+    ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}</div>
+    <h4>État</h4>
+    <div class="grid2">
+      ${t.status === 'done' ? B('reopen', '↺ Rouvrir') : B('done', '✓ Terminé', 'ok')}
+      ${t.status === 'cancelled' ? B('reopen', '↺ Rétablir') : B('cancel', '<s>Barrer</s>')}
+    </div>
+    <h4>Reporter</h4>
+    <div class="grid3">${B('to-today', "Aujourd'hui")}${B('plus1', '+1 jour')}${B('plus7', '+1 semaine')}</div>
+    <div class="row"><label class="date-l">📅<input type="date" id="pickDate" value="${t.date || ''}"></label>${t.date ? B('unplan', 'Retirer du planning') : ''}</div>
+    <h4>Contrainte</h4>
+    ${t.status === 'blocked'
+      ? `<div class="blk">⏳ En attente : ${esc(t.block?.reason || '')}${w && w.date ? ` · prévu ${fmtRel(w.date)}` : ''}</div>${B('unblock', 'Débloquer (c\'est arrivé)', 'full')}`
+      : B('block', '⏳ Bloquer — en attente de…', 'violet full')}
+    <h4>Importance</h4>
+    <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><button class="p-${k}${t.prio === k ? ' on' : ''}" data-act="prio" data-v="${k}" aria-label="${l}"></button>${l}</label>`).join('')}</div>
+    <div class="grid2" style="margin-top:16px">${B('edit', '✎ Modifier')}${B('del', '🗑 Supprimer', 'danger')}</div>`);
+}
+
+function openForm(t, preset = {}) {
+  const v = t || { title: '', cat: preset.cat || CATS[0], prio: 'yellow', date: preset.date || '', note: '' };
+  ui.cur = t ? t.id : null;
+  openSheet(`<h3>${t ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
+    <form id="taskForm" autocomplete="off">
+      <input name="title" value="${esc(v.title)}" placeholder="Que faut-il faire ?" required maxlength="200">
+      <div class="lbl">Catégorie</div>
+      <div class="cat-pick">${CATS.map(c => `<label><input type="radio" name="cat" value="${c}"${c === v.cat ? ' checked' : ''}><span>${c}</span></label>`).join('')}</div>
+      <div class="lbl">Importance</div>
+      <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><input type="radio" name="prio" value="${k}"${k === v.prio ? ' checked' : ''}><span class="circle p-${k}"></span>${l}</label>`).join('')}</div>
+      <div class="lbl">Jour</div>
+      <input type="date" name="date" value="${v.date || ''}">
+      <div class="grid3" style="margin-top:8px">${B('fd', 'Aucun', '', 'type="button" data-v=""')}${B('fd', "Aujourd'hui", '', `type="button" data-v="${today()}"`)}${B('fd', 'Demain', '', `type="button" data-v="${addDays(today(), 1)}"`)}</div>
+      <div class="lbl">Note</div>
+      <textarea name="note" placeholder="Détails, client, prix…">${esc(v.note)}</textarea>
+      <button class="btn primary full" style="margin-top:14px">${t ? 'Enregistrer' : 'Ajouter'}</button>
+    </form>`);
+  if (!t) setTimeout(() => $('#taskForm [name=title]')?.focus(), 60);
+}
+
+function openBlock(t) {
+  openSheet(`<h3>Bloquer « ${esc(t.title)} »</h3>
+    <form id="blockForm">
+      <div class="lbl">En attente de…</div>
+      <input name="reason" required placeholder="Ex : réception de l'outil, pièce du client…" maxlength="160">
+      <label class="chk"><input type="checkbox" name="addWait" checked> Ajouter à la fenêtre « Attentes »</label>
+      <div class="lbl">Arrivée prévue</div>
+      <input type="date" name="date" value="${addDays(today(), 2)}">
+      <button class="btn violet full" style="margin-top:14px">Bloquer la tâche</button>
+    </form>`);
+  setTimeout(() => $('#blockForm [name=reason]')?.focus(), 60);
+}
+
+/* ---------- actions ---------- */
+function setStatus(t, s) {
+  if (t.status === 'blocked' && s !== 'blocked') S.waits = S.waits.filter(w => w.taskId !== t.id);
+  t.status = s; t.doneAt = s === 'done' ? today() : null;
+  if (s !== 'blocked') t.block = null;
+}
+function moveTo(t, date) {
+  t.date = date; t.order = date ? nextOrder(date) : 0;
+  if (t.status === 'cancelled') t.status = 'todo';
+}
+const baseDay = t => t.date && t.date > today() ? t.date : today();
+function commit(msg, undo) { save(); render(); if (msg) toast(msg, undo); }
+function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; commit(); }; }
+
+function act(a, el, e) {
+  const t = ui.cur && find(ui.cur);
+  switch (a) {
+    case 'view': S.settings.view = el.dataset.view; S.settings.waitsOpen = false; save(); closeSheet(); render(false); $('#main').scrollTop = 0; if (el.dataset.view === 'planning') scrollToToday(); break;
+    case 'new': openForm(null, { date: S.settings.view === 'planning' ? today() : '', cat: S.settings.view === 'tasks' && S.settings.cat || undefined }); break;
+    case 'add-day': openForm(null, { date: el.dataset.day }); break;
+    case 'close': closeSheet(); break;
+    case 'wk-': S.settings.offset--; save(); render(); break;
+    case 'wk+': S.settings.offset++; save(); render(); break;
+    case 'wk0': S.settings.offset = 0; save(); render(); scrollToToday(); break;
+    case 'n-': S.settings.weeks = Math.max(1, S.settings.weeks - 1); save(); render(); break;
+    case 'n+': S.settings.weeks = Math.min(8, S.settings.weeks + 1); save(); render(); break;
+    case 'tray': S.settings.trayOpen = !S.settings.trayOpen; save(); render(); break;
+    case 'late-today': { const u = snapshot(); const l = S.tasks.filter(isLate); l.forEach(x => moveTo(x, today())); commit(`${l.length} tâche(s) déplacée(s) à aujourd'hui`, u); break; }
+    case 'waits': S.settings.waitsOpen = !S.settings.waitsOpen; save(); renderWaits(); break;
+    case 'waits-open': S.settings.waitsOpen = true; save(); renderWaits(); break;
+    case 'w-ok': {
+      const w = S.waits.find(x => x.id === el.dataset.id); if (!w) break;
+      const u = snapshot(); const task = w.taskId && find(w.taskId);
+      S.waits = S.waits.filter(x => x !== w);
+      if (task && task.status === 'blocked') { task.status = 'todo'; task.block = null; commit(`Reçu ! « ${task.title} » est débloquée`, u); }
+      else commit(`« ${w.title} » reçu`, u);
+      break;
+    }
+    case 'w-del': { const u = snapshot(); const w = S.waits.find(x => x.id === el.dataset.id); S.waits = S.waits.filter(x => x !== w); commit('Attente supprimée', u); break; }
+    case 'filter': S.settings.filter = el.dataset.v; save(); render(false); break;
+    case 'cat': S.settings.cat = el.dataset.v; save(); render(false); break;
+    case 'fd': $('#taskForm [name=date]').value = el.dataset.v; break;
+    case 'theme': S.settings.theme = el.dataset.v; save(); render(); break;
+    case 'notif-on': enableNotif(); break;
+    case 'notif-test': notify(true); break;
+    case 'export': exportData(); break;
+    case 'purge': { const u = snapshot(); const n = S.tasks.filter(x => !isActive(x)).length; S.tasks = S.tasks.filter(isActive); commit(`${n} tâche(s) effacée(s)`, u); break; }
+  }
+  if (!t) return;
+  const u = snapshot();
+  switch (a) {
+    case 'done': setStatus(t, 'done'); closeSheet(); commit('Terminée ✓', u); break;
+    case 'cancel': setStatus(t, 'cancelled'); closeSheet(); commit('Tâche barrée', u); break;
+    case 'reopen': setStatus(t, 'todo'); closeSheet(); commit('Tâche rouverte', u); break;
+    case 'to-today': moveTo(t, today()); closeSheet(); commit("Reportée à aujourd'hui", u); break;
+    case 'plus1': moveTo(t, addDays(baseDay(t), 1)); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u); break;
+    case 'plus7': moveTo(t, addDays(baseDay(t), 7)); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u); break;
+    case 'unplan': moveTo(t, null); closeSheet(); commit('Retirée du planning', u); break;
+    case 'block': openBlock(t); break;
+    case 'unblock': setStatus(t, 'todo'); closeSheet(); commit('Tâche débloquée', u); break;
+    case 'prio': t.prio = el.dataset.v; save(); render(); openTask(t.id); break;
+    case 'edit': openForm(t); break;
+    case 'del': S.tasks = S.tasks.filter(x => x !== t); S.waits = S.waits.filter(w => w.taskId !== t.id); closeSheet(); commit('Tâche supprimée', u); break;
+  }
+}
+
+document.addEventListener('click', e => {
+  if (Date.now() - justDragged < 450) { e.preventDefault(); e.stopPropagation(); return; }
+  const a = e.target.closest('[data-act]');
+  if (a) { act(a.dataset.act, a, e); return; }
+  const tk = e.target.closest('.task[data-id]');
+  if (tk && !tk.closest('.sheet')) openTask(tk.dataset.id);
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, fd = new FormData(f);
+  if (f.id === 'taskForm') {
+    const title = (fd.get('title') || '').trim(); if (!title) return;
+    const data = { title, cat: fd.get('cat') || 'Autre', prio: fd.get('prio') || 'yellow', note: (fd.get('note') || '').trim() };
+    const date = fd.get('date') || null;
+    const t = ui.cur && find(ui.cur);
+    if (t) { Object.assign(t, data); if (t.date !== date) moveTo(t, date); closeSheet(); commit('Enregistrée'); }
+    else { S.tasks.push({ id: uid(), ...data, status: 'todo', date, order: date ? nextOrder(date) : 0, created: Date.now(), block: null }); closeSheet(); commit('Tâche ajoutée'); }
+  } else if (f.id === 'blockForm') {
+    const t = ui.cur && find(ui.cur); if (!t) return;
+    const reason = (fd.get('reason') || '').trim(); if (!reason) return;
+    setStatus(t, 'blocked');
+    let waitId = null;
+    if (fd.get('addWait')) { waitId = uid(); S.waits.push({ id: waitId, title: reason, date: fd.get('date') || null, taskId: t.id }); }
+    t.block = { reason, waitId };
+    closeSheet(); commit('Tâche bloquée (violet)');
+  } else if (f.id === 'wForm') {
+    const title = (fd.get('title') || '').trim(); if (!title) return;
+    S.waits.push({ id: uid(), title, date: fd.get('date') || null, taskId: null });
+    commit('Attente ajoutée');
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'pickDate') {
+    const t = ui.cur && find(ui.cur); if (!t || !e.target.value) return;
+    const u = snapshot(); moveTo(t, e.target.value); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u);
+  } else if (e.target.id === 'importFile') importData(e.target.files[0]);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { ui.q = e.target.value; $('#taskList').innerHTML = listHTML(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+let toastTimer;
+function toast(msg, undo) {
+  const el = $('#toast');
+  el.innerHTML = `<span>${esc(msg)}</span>${undo ? '<button>Annuler</button>' : ''}`;
+  if (undo) el.querySelector('button').onclick = () => { el.classList.remove('show'); undo(); };
+  el.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 4500 : 2200);
+}
+function scrollToToday() { requestAnimationFrame(() => { const d = $('.day.today'); if (d) $('#main').scrollTop = Math.max(0, d.offsetTop - 120); }); }
+
+/* ---------- glisser-déposer (tactile : appui long ; souris : glisser) ---------- */
+let pending = null, drag = null, justDragged = 0;
+const pt = e => { const p = e.touches ? (e.touches[0] || e.changedTouches[0]) : e; return { x: p.clientX, y: p.clientY }; };
+function onStart(e) {
+  if (e.button > 0 || drag) return;
+  const el = e.target.closest('.task[data-id]');
+  if (!el || !el.closest('[data-drop]')) return;
+  const p = pt(e), touch = !!e.touches;
+  pending = { el, touch, x0: p.x, y0: p.y, x: p.x, y: p.y };
+  if (touch) pending.timer = setTimeout(beginDrag, 300);
+}
+function beginDrag() {
+  if (!pending) return;
+  const { el, x, y } = pending, r = el.getBoundingClientRect();
+  const ghost = el.cloneNode(true); ghost.classList.add('ghost');
+  ghost.style.width = r.width + 'px'; document.body.appendChild(ghost);
+  const line = document.createElement('div'); line.className = 'drop-line';
+  drag = { el, id: el.dataset.id, ghost, line, dx: x - r.left, dy: y - r.top, x, y, x0: pending.x0, y0: pending.y0, moved: false, zone: null, before: null };
+  pending = null;
+  el.classList.add('drag-src'); document.body.classList.add('dragging');
+  navigator.vibrate?.(12);
+  positionGhost(); drag.raf = requestAnimationFrame(loop);
+}
+function onMove(e) {
+  if (pending) {
+    const p = pt(e); pending.x = p.x; pending.y = p.y;
+    if (Math.hypot(p.x - pending.x0, p.y - pending.y0) > 8) {
+      if (pending.touch) { clearTimeout(pending.timer); pending = null; } else beginDrag();
+    }
+  }
+  if (!drag) return;
+  if (e.cancelable) e.preventDefault();
+  const p = pt(e); drag.x = p.x; drag.y = p.y;
+  if (Math.hypot(p.x - drag.x0, p.y - drag.y0) > 8) drag.moved = true;
+  positionGhost();
+}
+function positionGhost() { drag.ghost.style.left = (drag.x - drag.dx) + 'px'; drag.ghost.style.top = (drag.y - drag.dy) + 'px'; }
+function loop() {
+  if (!drag) return;
+  const main = $('#main'), m = main.getBoundingClientRect(), edge = 60;
+  if (drag.y < m.top + edge) main.scrollTop -= Math.min(18, (m.top + edge - drag.y) / 3);
+  else if (drag.y > m.bottom - edge) main.scrollTop += Math.min(18, (drag.y - m.bottom + edge) / 3);
+  const board = $('.board');
+  if (board) { const b = board.getBoundingClientRect(); if (drag.x < b.left + 28) board.scrollLeft -= 9; else if (drag.x > b.right - 28) board.scrollLeft += 9; }
+  updateTarget();
+  drag.raf = requestAnimationFrame(loop);
+}
+function updateTarget() {
+  const under = document.elementFromPoint(drag.x, drag.y);
+  const zone = under && under.closest('[data-drop]');
+  if (zone !== drag.zone) { drag.zone?.classList.remove('over'); zone?.classList.add('over'); drag.zone = zone; }
+  const list = zone && zone.querySelector('.tasks');
+  if (!list) { drag.line.remove(); drag.before = null; return; }
+  let before = null;
+  for (const it of list.querySelectorAll('.task[data-id]')) {
+    if (it === drag.el) continue;
+    const r = it.getBoundingClientRect();
+    if (drag.y < r.top + r.height / 2) { before = it; break; }
+  }
+  drag.before = before;
+  if (drag.line.parentNode !== list || drag.line.nextSibling !== before) list.insertBefore(drag.line, before);
+}
+function onEnd(e) {
+  if (pending) { clearTimeout(pending.timer); pending = null; }
+  if (!drag) return;
+  cancelAnimationFrame(drag.raf);
+  const d = drag; drag = null;
+  d.ghost.remove(); d.line.remove(); d.zone?.classList.remove('over');
+  d.el.classList.remove('drag-src'); document.body.classList.remove('dragging');
+  justDragged = Date.now();
+  if (e.cancelable) e.preventDefault();
+  if (!d.moved) { openTask(d.id); return; }   // appui long sans bouger = ouvrir le menu
+  if (!d.zone) return;
+  const t = find(d.id); if (!t) return;
+  const u = snapshot();
+  const target = d.zone.dataset.drop === 'none' ? null : d.zone.dataset.drop;
+  const changedDay = t.date !== target;
+  t.date = target;
+  if (target) {
+    const ids = [...d.zone.querySelectorAll('.tasks .task[data-id]')].map(x => x.dataset.id).filter(id => id !== t.id);
+    const idx = d.before ? ids.indexOf(d.before.dataset.id) : ids.length;
+    ids.splice(idx < 0 ? ids.length : idx, 0, t.id);
+    ids.forEach((id, i) => { const x = find(id); if (x) x.order = i; });
+  }
+  if (changedDay) commit(target ? `Déplacée à ${fmtRel(target)}` : 'Retirée du planning', u); else commit();
+}
+const mainEl = $('#main');
+mainEl.addEventListener('touchstart', onStart, { passive: true });
+mainEl.addEventListener('mousedown', onStart);
+document.addEventListener('touchmove', onMove, { passive: false });
+document.addEventListener('mousemove', onMove);
+document.addEventListener('touchend', onEnd, { passive: false });
+document.addEventListener('touchcancel', onEnd);
+document.addEventListener('mouseup', onEnd);
+mainEl.addEventListener('contextmenu', e => { if (e.target.closest('.task')) e.preventDefault(); });
+
+/* ---------- sauvegarde fichier ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify({ app: 'planning', v: 1, tasks: S.tasks, waits: S.waits }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planning-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function importData(file) {
+  if (!file) return;
+  file.text().then(txt => {
+    const x = JSON.parse(txt);
+    if (!Array.isArray(x.tasks)) throw new Error('format');
+    if (!confirm(`Remplacer les données actuelles par ce fichier (${x.tasks.length} tâches) ?`)) return;
+    const u = snapshot(); S.tasks = x.tasks; S.waits = x.waits || []; commit('Import terminé', u);
+  }).catch(() => toast('Fichier invalide'));
+}
+
+/* ---------- notifications ---------- */
+const NOTIF_TAG = 'planning-resume';
+function buildSummary(st) {
+  const t = today();
+  const act = st.tasks.filter(x => x.status === 'todo' || x.status === 'blocked');
+  const late = act.filter(x => x.date && x.date < t).sort(byPrio);
+  const tod = act.filter(x => x.date === t).sort(byPrio);
+  const arr = st.waits.filter(w => w.date && w.date <= t);
+  const icon = x => x.status === 'blocked' ? '🟣' : ({ red: '🔴', orange: '🟠', yellow: '🟡', white: '⚪' }[x.prio] || '•');
+  const lines = [];
+  if (late.length) lines.push(`⚠ En retard : ${late.map(x => icon(x) + ' ' + x.title).join(', ')}`);
+  if (tod.length) lines.push(`📌 Aujourd'hui : ${tod.map(x => icon(x) + ' ' + x.title).join(', ')}`);
+  if (arr.length) lines.push(`📦 Attendu : ${arr.map(w => w.title).join(', ')}`);
+  const parts = [];
+  if (tod.length) parts.push(`${tod.length} aujourd'hui`);
+  if (late.length) parts.push(`${late.length} en retard`);
+  if (arr.length) parts.push(`${arr.length} colis`);
+  return { count: late.length + tod.length + arr.length, title: parts.length ? 'Planning · ' + parts.join(' · ') : 'Planning', body: lines.join('\n') };
+}
+async function swReg() { try { return 'serviceWorker' in navigator ? (await navigator.serviceWorker.getRegistration()) || null : null; } catch (e) { return null; } }
+async function firstToday() {
+  const d = today();
+  try {
+    const c = await caches.open('planning-state'), k = new URL('__loud', location.href);
+    const r = await c.match(k); if (r && (await r.text()) === d) return false;
+    await c.put(k, new Response(d)); return true;
+  } catch (e) {
+    try { if (localStorage.getItem('planning.loud') === d) return false; localStorage.setItem('planning.loud', d); } catch (e2) {}
+    return true;
+  }
+}
+let notifTimer;
+function queueNotify() { clearTimeout(notifTimer); notifTimer = setTimeout(() => notify(false), 800); }
+async function notify(force) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') { if (force) toast("Active d'abord les notifications"); return; }
+  const s = buildSummary(S), reg = await swReg();
+  if (!s.count && !force) { if (reg) (await reg.getNotifications({ tag: NOTIF_TAG })).forEach(n => n.close()); return; }
+  const loud = force || await firstToday();
+  const opts = { body: s.count ? s.body : "Rien à faire aujourd'hui 🎉", tag: NOTIF_TAG, renotify: loud, silent: !loud, requireInteraction: true,
+    icon: 'icon-192.png', badge: 'badge-96.png', data: { url: location.href } };
+  try { if (reg) await reg.showNotification(s.title, opts); else new Notification(s.title, opts); }
+  catch (e) { if (force) toast('Notification impossible ici (installe l’app)'); }
+}
+async function registerPeriodic() {
+  const reg = await swReg(); if (!reg || !('periodicSync' in reg)) return;
+  try {
+    const p = await navigator.permissions.query({ name: 'periodic-background-sync' });
+    if (p.state === 'granted') await reg.periodicSync.register('planning-check', { minInterval: 3 * 3600e3 });
+  } catch (e) {}
+}
+async function enableNotif() {
+  if (!('Notification' in window)) { toast("Pas de notifications ici. Sur iPhone, ajoute d'abord l'app à l'écran d'accueil."); return; }
+  const p = await Notification.requestPermission();
+  if (p === 'granted') { await registerPeriodic(); notify(true); toast('Notifications activées'); }
+  else toast('Permission refusée');
+  render();
+}
+let persistTimer;
+function persistForSW() {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(async () => {
+    try {
+      const c = await caches.open('planning-state');
+      await c.put(new URL('__state', location.href), new Response(JSON.stringify({ tasks: S.tasks, waits: S.waits }), { headers: { 'content-type': 'application/json' } }));
+    } catch (e) {}
+  }, 400);
+}
+
+/* ---------- démarrage ---------- */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  try { navigator.serviceWorker.register('sw.js').then(() => registerPeriodic()).catch(() => {}); } catch (e) {}
+}
+let lastDay = today();
+function tick() {
+  if (today() !== lastDay) { lastDay = today(); render(); notify(false); }
+}
+setInterval(tick, 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); notify(false); } });
+render(false);
+if (S.settings.view === 'planning') scrollToToday();
+persistForSW();
+notify(false);
+</script>
+</body>
+</html>
