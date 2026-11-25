@@ -3,6 +3,7 @@
 App de planning très simple (PWA : s'installe sur l'écran d'accueil, marche hors-ligne).
 
 - **Couleurs** : chaque tâche a sa propre couleur (aléatoire, bouton 🎲 pour en changer) ; le **petit carré** devant le titre indique l'importance : rouge (urgent), orange (important), jaune (normal), blanc (faible). **Vert** = terminée, **violet** = bloquée, grisée barrée = abandonnée.
+- **Contour d'importance** : chaque tâche à faire est entourée de la couleur de son importance (épaisseur réglable de 0 à 6 px dans Réglages ; le petit carré peut être masqué). Les tâches terminées ou barrées n'ont pas de contour et sont estompées ; une tâche en retard porte une étiquette EN RETARD.
 - **Jours** : couleur fixe — lundi gris, mardi jaune, mercredi orange, jeudi bleu, vendredi vert, samedi rouge, dimanche blanc. Chaque jour est coupé en **Matin** / **Après-midi** : on glisse la tâche dans la demi-journée voulue (ou on choisit dans le menu de la tâche).
 - **Planning** : semaines en colonnes verticales (lundi → dimanche), la semaine actuelle à gauche, de 1 à 8 semaines côte à côte (boutons − / +), navigation ‹ Auj. ›.
 - **Glisser-déposer** : appui long sur une tâche puis glisser vers un autre jour (ou vers « À planifier »).

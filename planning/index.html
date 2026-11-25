@@ -257,6 +257,53 @@ input[type=color]{width:52px;height:36px;padding:2px;border-radius:9px;cursor:po
   display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px #0005}
 #toast.show{display:flex}
 #toast button{border:0;background:none;color:var(--accent);font-weight:800;cursor:pointer}
+
+/* ===== Harmonie : une seule information forte par élément ===== */
+:root{--ring-w:3px}
+/* Tâche : fond = sa couleur, contour = importance, rien d'autre de criard */
+.task{border:0;border-radius:10px;padding:7px 9px 7px 10px;margin:0 0 6px;font-weight:650;line-height:1.25;
+  --ring:var(--ring-w);box-shadow:inset 0 0 0 var(--ring) var(--pc,transparent),0 1px 2px #00000024}
+.task[data-p=red]{--pc:var(--pr-red)} .task[data-p=orange]{--pc:var(--pr-orange)}
+.task[data-p=yellow]{--pc:var(--pr-yellow)} .task[data-p=white]{--pc:var(--pr-white)}
+.task.c-done,.task.c-cancel{--ring:0px}
+.task.c-done{opacity:.6}
+.task.c-cancel{border:0;opacity:.75}
+.task.late{box-shadow:inset 0 0 0 var(--ring) var(--pc,transparent),0 1px 2px #00000024}
+.late-tag{display:inline-block;background:var(--red);color:#fff;border-radius:5px;padding:0 6px;font-size:10.5px;font-weight:800;letter-spacing:.02em;margin:3px 4px 0 0}
+.badge{background:color-mix(in srgb,currentColor 20%,transparent);font-weight:700;border-radius:5px}
+.p-white .badge,.p-yellow .badge{background:color-mix(in srgb,currentColor 14%,transparent)}
+.psq{width:10px;height:10px;border-radius:3px;margin-right:6px;box-shadow:0 0 0 1.5px color-mix(in srgb,currentColor 70%,transparent)}
+.no-sq .psq{display:none}
+.t-sub{opacity:.85;font-weight:550}
+/* Jour : fond neutre, couleur du jour en bande à gauche + pastille du nom */
+.day{background:color-mix(in srgb,color-mix(in srgb,var(--dc) 5%,var(--surface)) var(--a-day),transparent);
+  border:1px solid color-mix(in srgb,var(--line) 85%,transparent);border-left:6px solid var(--dc);border-radius:12px;
+  box-shadow:0 1px 2px #0000000f;margin-bottom:10px}
+.day.d6{border-left-color:color-mix(in srgb,var(--dc) 70%,var(--line))}
+.day-h{background:none;color:var(--muted);padding:7px 8px 3px;font-size:12.5px;font-weight:700;justify-content:flex-start;gap:6px}
+.day-h span{display:inline-flex;align-items:center;gap:6px}
+.day-pill{background:var(--dc);color:var(--dt);border-radius:6px;padding:1px 7px;font-weight:800;box-shadow:0 0 0 1px #0000001a}
+.day.d6 .day-h{border-bottom:0}
+.day.today{outline:2px solid var(--accent);outline-offset:2px;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 25%,transparent)}
+.day.today .day-h{color:var(--accent)}
+.day.past{opacity:1}
+.day.past .day-h,.day.past .half-l,.day.past .task:not(.late){opacity:.55}
+.ring-prev{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}
+.ring-prev .task{margin:0;cursor:default}
+/* Matin / après-midi : discret */
+.half{padding:1px 8px 2px;min-height:32px}
+.half + .half{border-top:1px dashed color-mix(in srgb,var(--line) 90%,transparent)}
+.half-l{font-size:9.5px;letter-spacing:.09em;color:color-mix(in srgb,var(--muted) 75%,transparent);margin:3px 0 4px}
+.half-l .add{background:none;box-shadow:none;color:var(--muted);width:22px;height:18px;font-size:16px;opacity:.55}
+.half-l .add:hover{opacity:1}
+.half.over{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.day-wait{padding:0 8px 6px;font-size:11.5px}
+.week-h b{font-size:15px}
+.tray .task{margin:0}
+/* Liste et menus */
+.group .task{padding:10px 12px;margin-bottom:8px}
+.group h3{margin:10px 0 8px}
+.sh-head .task{padding:11px 13px}
 </style>
 </head>
 <body>
@@ -318,7 +365,8 @@ const DEFAULT_CATS = {
 const CAT_KINDS = [['task', 'Tâches'], ['wait', 'Attentes'], ['need', 'Besoins']];
 const NOCAT = 'Sans catégorie';
 // couleurs aléatoires des tâches (évite le vert = terminé et le violet = bloqué)
-const TASK_COLORS_DEFAULT = ['#0284c7', '#0d9488', '#db2777', '#92400e', '#475569', '#0891b2', '#d97706', '#e11d48', '#1e3a8a', '#c2410c', '#be185d', '#0f766e', '#78716c', '#2563eb', '#a16207', '#9f1239'];
+const TASK_COLORS_OLD = ['#0284c7', '#0d9488', '#db2777', '#92400e', '#475569', '#0891b2', '#d97706', '#e11d48', '#1e3a8a', '#c2410c', '#be185d', '#0f766e', '#78716c', '#2563eb', '#a16207', '#9f1239'];
+const TASK_COLORS_DEFAULT = ['#2f6f9f', '#2a8579', '#b5523b', '#7d5a46', '#4b5d79', '#a0466c', '#66772c', '#b97812', '#5b6470', '#1f7a8c', '#99582f', '#3b5b92'];
 // couleur fixe de chaque jour : [fond, texte]
 const DEFAULT_COLORS = {
   prio: { red: '#ef4444', orange: '#f97316', yellow: '#facc15', white: '#ffffff' },
@@ -357,7 +405,13 @@ function load() {
   const d = defaults();
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); mergeLook(d, x.look); }
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); mergeLook(d, x.look);
+      // ancienne palette par défaut -> nouvelle palette harmonisée (une seule fois)
+      if (JSON.stringify(d.colors.palette) === JSON.stringify(TASK_COLORS_OLD)) {
+        d.colors.palette = TASK_COLORS_DEFAULT.slice();
+        for (const t of d.tasks) { const i = TASK_COLORS_OLD.indexOf(t.color); if (i >= 0) t.color = TASK_COLORS_DEFAULT[i % TASK_COLORS_DEFAULT.length]; }
+      }
+    }
   } catch (e) {}
   PlanningLogic.migrate(d);
   fixCats(d);
@@ -371,7 +425,7 @@ function mergeColors(d, c) {
   if (Array.isArray(c.days) && c.days.length === 7 && c.days.every(ok)) d.colors.days = c.days;
   if (Array.isArray(c.palette) && c.palette.length && c.palette.every(ok)) d.colors.palette = c.palette;
 }
-const DEFAULT_LOOK = { task: 100, day: 100, panel: 100, dim: 25, blur: 0 };
+const DEFAULT_LOOK = { task: 100, day: 100, panel: 100, dim: 25, blur: 0, ring: 3, sq: 1 };
 const WALL_KEY = 'planning.wall';
 function mergeLook(d, l) {
   if (!l) return;
@@ -389,6 +443,8 @@ function applyLook() {
   w.style.backgroundImage = wallData ? `url("${wallData}")` : '';
   w.style.filter = L.blur ? `blur(${L.blur}px)` : '';
   w.style.setProperty('--dim', L.dim / 100);
+  st.setProperty('--ring-w', L.ring + 'px');
+  document.documentElement.classList.toggle('no-sq', !L.sq);
 }
 // réduit la photo (1600 px max, JPEG) pour qu'elle tienne dans la mémoire du navigateur
 async function shrinkImage(file, max, q) {
@@ -467,7 +523,7 @@ function whenText(t) {
   if (n > 1) parts.push(`${n} jours`);
   if (ds.length) parts.push(ds.slice(0, 3).join(', ') + (ds.length > 3 ? '…' : ''));
   if (u) parts.push(n > 1 ? `${u} à placer` : 'non planifiée');
-  return (isLate(t) ? '⚠ en retard · ' : '') + parts.join(' · ');
+  return parts.join(' · ');
 }
 
 /* ---------- rendu ---------- */
@@ -502,7 +558,8 @@ function chip(t, o = {}) {
     const w = waitFor(t);
     sub += `<span class="t-sub">⏳ ${esc(t.block?.reason || 'En attente')}${w && w.date ? ' · ' + fmtRel(w.date) : ''}</span>`;
   }
-  if (late && !o.full) sub += `<span class="t-sub">⚠ en retard (${fmtRel(s.d)})</span>`;
+  if (late && !o.full) sub += `<span class="t-sub"><span class="late-tag">EN RETARD</span>${fmtRel(s.d)}</span>`;
+  if (late && o.full) sub += `<span class="t-sub"><span class="late-tag">EN RETARD</span></span>`;
   let meta = '';
   if (o.full) {
     meta = `<span class="meta">${esc(catLabel(t.cat))} · ${whenText(t)}</span>`;
@@ -533,7 +590,7 @@ function renderPlanning() {
       const day = addDays(ws, d);
       const waits = S.waits.filter(x => x.date === day);
       h += `<div class="day d${d}${day === t ? ' today' : ''}${day < t ? ' past' : ''}" style="--dc:${dayColor(d)[0]};--dt:${dayColor(d)[1]}">
-        <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span></div>
+        <div class="day-h"><span><b class="day-pill">${DAYS[d]} ${parse(day).getDate()}</b>${day === t ? "aujourd'hui" : ''}</span></div>
         ${HALVES.map(([p, l]) => `<div class="half" data-drop="${day}" data-p="${p}"><div class="half-l"><span>${l}</span><button class="add" data-act="add-day" data-day="${day}" data-p="${p}" aria-label="Ajouter une tâche ${l.toLowerCase()}">+</button></div>
           <div class="tasks">${slotsOn(day, p).map(x => chip(x.t, { slot: x.i })).join('')}</div></div>`).join('')}
         ${waits.map(x => `<div class="day-wait" data-act="waits-open">📦 ${esc(x.title)}</div>`).join('')}
@@ -680,6 +737,10 @@ function renderSettings() {
     ${rangeRow('task', 'Opacité des tâches', 30, 100, '%')}
     ${rangeRow('day', 'Opacité des cases jours', 0, 100, '%')}
     ${rangeRow('panel', 'Opacité des panneaux (haut, bas, cartes)', 0, 100, '%')}
+    <div class="lbl">Importance</div>
+    ${rangeRow('ring', "Épaisseur du contour d'importance", 0, 6, ' px')}
+    <label class="chk"><input type="checkbox" data-lookc="sq"${S.look.sq ? ' checked' : ''}> Afficher aussi le petit carré d'importance</label>
+    <div class="ring-prev">${PRIOS.map(([k, l], i) => { const c = S.colors.palette[i % S.colors.palette.length]; return `<span class="task rc" data-p="${k}" style="--tc:${c};--tt:${txt(c)}"><i class="psq" data-p="${k}"></i>${l}</span>`; }).join('')}</div>
     <button class="btn sm" data-act="look-reset">Opacités par défaut</button></div>
   <div class="card"><h3>🏷️ Catégories</h3>
     <p>Ajoute, renomme (✎), range (↑) ou supprime (✕) les catégories. Le chiffre indique combien d'éléments les utilisent.</p>
@@ -1039,6 +1100,8 @@ document.addEventListener('change', e => {
     setCol(e.target.dataset.col, e.target.value); commit();
   } else if (e.target.dataset && e.target.dataset.look) {
     save();
+  } else if (e.target.dataset && e.target.dataset.lookc) {
+    S.look[e.target.dataset.lookc] = e.target.checked ? 1 : 0; save(); applyLook();
   } else if (e.target.id === 'wallFile') { setWall(e.target.files[0]);
   } else if (e.target.id === 'importFile') importData(e.target.files[0]);
 });
