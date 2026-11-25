@@ -1,6 +1,7 @@
 /* Service worker : hors-ligne + rappel périodique (Android / Chrome installé) */
-const VERSION = 'planning-v1';
-const SHELL = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'badge-96.png'];
+importScripts('logic.js');
+const VERSION = 'planning-v2';
+const SHELL = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'badge-96.png', 'logic.js'];
 const STATE = 'planning-state';
 const TAG = 'planning-resume';
 
@@ -24,26 +25,6 @@ self.addEventListener('fetch', e => {
 
 const pad = n => String(n).padStart(2, '0');
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
-const RANK = { red: 0, orange: 1, yellow: 2, white: 3 };
-const ICON = { red: '🔴', orange: '🟠', yellow: '🟡', white: '⚪' };
-
-function summary(st) {
-  const t = today();
-  const act = (st.tasks || []).filter(x => x.status === 'todo' || x.status === 'blocked');
-  const sort = (a, b) => RANK[a.prio] - RANK[b.prio];
-  const late = act.filter(x => x.date && x.date < t).sort(sort);
-  const tod = act.filter(x => x.date === t).sort(sort);
-  const arr = (st.waits || []).filter(w => w.date && w.date <= t);
-  const ic = x => x.status === 'blocked' ? '🟣' : (ICON[x.prio] || '•');
-  const lines = [], parts = [];
-  if (late.length) lines.push(`⚠ En retard : ${late.map(x => ic(x) + ' ' + x.title).join(', ')}`);
-  if (tod.length) lines.push(`📌 Aujourd'hui : ${tod.map(x => ic(x) + ' ' + x.title).join(', ')}`);
-  if (arr.length) lines.push(`📦 Attendu : ${arr.map(w => w.title).join(', ')}`);
-  if (tod.length) parts.push(`${tod.length} aujourd'hui`);
-  if (late.length) parts.push(`${late.length} en retard`);
-  if (arr.length) parts.push(`${arr.length} colis`);
-  return { count: late.length + tod.length + arr.length, title: 'Planning · ' + parts.join(' · '), body: lines.join('\n') };
-}
 async function firstToday() {
   const c = await caches.open(STATE), k = new URL('__loud', self.registration.scope), d = today();
   const r = await c.match(k); if (r && (await r.text()) === d) return false;
@@ -53,7 +34,7 @@ async function check() {
   const c = await caches.open(STATE);
   const r = await c.match(new URL('__state', self.registration.scope));
   if (!r) return;
-  const s = summary(await r.json());
+  const s = PlanningLogic.summary(await r.json(), today());
   if (!s.count) { (await self.registration.getNotifications({ tag: TAG })).forEach(n => n.close()); return; }
   const loud = await firstToday();
   await self.registration.showNotification(s.title, {

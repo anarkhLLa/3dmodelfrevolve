@@ -5,9 +5,11 @@ App de planning très simple (PWA : s'installe sur l'écran d'accueil, marche ho
 - **Couleurs** : rouge (urgent), orange (important), jaune (normal), blanc (faible), **vert** = terminée, **violet** = bloquée (en attente de quelque chose), grisée barrée = abandonnée.
 - **Planning** : semaines en colonnes verticales (lundi → dimanche), la semaine actuelle à gauche, de 1 à 8 semaines côte à côte (boutons − / +), navigation ‹ Auj. ›.
 - **Glisser-déposer** : appui long sur une tâche puis glisser vers un autre jour (ou vers « À planifier »).
+- **Étaler sur plusieurs jours** (menu de la tâche → Durée, de 1 à 14 jours) : ça ne crée pas de nouvelle tâche ; la tâche reste dans « À planifier » (×2 = 2 jours encore à placer) et on la glisse autant de fois que nécessaire. Dans le planning, chaque case affiche j1/3, j2/3… et chaque jour peut être marqué « Journée faite ».
+- **Besoins** : chaque tâche a sa liste (ex. « 2 paquets de vis »), visible dans l'onglet 🛒 Besoins où on les coche une fois obtenus. 🛒2 sur une tâche = 2 besoins à obtenir.
 - **Toucher une tâche** : Terminé, Barrer, Reporter (+1 jour, +1 semaine, date au choix), Bloquer (violet + ajout aux attentes), changer la couleur, Modifier, Supprimer. « Annuler » dans le message en bas pour revenir en arrière.
 - **Fenêtre Attentes** (toujours visible en haut) : colis, pièces, outils… Devient orange le jour de l'arrivée prévue. « Reçu » débloque automatiquement la tâche liée.
-- **Notifications** (Réglages → Activer) : résumé des tâches du jour, en retard et des colis attendus.
+- **Notifications** (Réglages → Activer) : résumé des tâches du jour, en retard, des colis attendus et des besoins non remplis.
 - **Sauvegarde** : données stockées sur le téléphone, export/import d'un fichier JSON dans Réglages.
 
 ## Installation

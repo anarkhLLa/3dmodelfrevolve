@@ -36,7 +36,6 @@ body{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 button{font:inherit;color:inherit}
 small,.muted{color:var(--muted)}
 
-/* Header + fenêtre attentes */
 header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
   padding:calc(env(safe-area-inset-top) + 6px) 12px 8px}
 .bar{display:flex;align-items:center;gap:8px;min-height:40px}
@@ -64,9 +63,11 @@ header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
 main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:10px 0 96px;overscroll-behavior:contain}
 nav{display:flex;background:var(--surface);border-top:1px solid var(--line);flex:none;padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;border:0;background:none;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px;
-  font-size:11px;font-weight:600;color:var(--muted);cursor:pointer}
+  font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;position:relative}
 nav button i{font-style:normal;font-size:19px;line-height:1}
 nav button.on{color:var(--accent)}
+nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);color:#fff;border-radius:999px;font-size:10px;
+  font-weight:800;padding:1px 5px;line-height:1.3}
 #fab{position:fixed;right:16px;bottom:calc(68px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;
   border:0;background:var(--accent);color:#fff;font-size:30px;line-height:1;box-shadow:0 6px 18px #0004;z-index:20;cursor:pointer}
 
@@ -75,6 +76,8 @@ nav button.on{color:var(--accent)}
   border:1px solid transparent;overflow-wrap:anywhere;cursor:pointer;
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .t-sub{display:block;font-size:11.5px;font-weight:500;opacity:.92;margin-top:1px}
+.badge{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;margin-left:3px;background:#0000002a;vertical-align:1px;white-space:nowrap}
+.p-white .badge,.p-yellow .badge{background:#0000001a}
 .p-red{background:var(--red);color:#fff}
 .p-orange{background:var(--orange);color:#fff}
 .p-yellow{background:var(--yellow);color:#1b1b1b}
@@ -121,7 +124,7 @@ body.dragging .board{scroll-snap-type:none}
 .ghost{position:fixed;z-index:100;pointer-events:none;margin:0;transform:rotate(2deg) scale(1.05);box-shadow:0 10px 26px #0006;opacity:.95}
 .task.drag-src{opacity:.3}
 
-/* Liste des tâches */
+/* Listes */
 .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:none}
 .chip{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);font-size:13px;font-weight:600;cursor:pointer}
 .chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -133,21 +136,40 @@ body.dragging .board{scroll-snap-type:none}
 .group .task{padding:9px 11px;font-size:14.5px;margin-bottom:6px}
 .meta{display:block;font-size:12px;font-weight:500;opacity:.85;margin-top:2px}
 
+/* Besoins */
+.need{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.need span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.need.ok span{text-decoration:line-through;color:var(--muted);font-weight:500}
+.need .ck{width:28px;height:28px;flex:none;border-radius:8px;border:2px solid var(--line);background:var(--surface);
+  font-weight:900;color:#fff;cursor:pointer;line-height:1}
+.need.ok .ck{background:var(--green);border-color:var(--green)}
+.need .x{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px}
+.need-add{display:flex;gap:6px;margin-top:8px}
+.need-add input{flex:1}
+.need-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px 4px;margin:0 12px 12px}
+.need-card .task{margin-bottom:4px}
+.need-card .need:last-child{border-bottom:0}
+.add-need{margin:0 12px 14px;display:grid;grid-template-columns:1fr;gap:6px}
+.add-need .row2{display:flex;gap:6px}
+.add-need .row2 input{flex:1}
+
 /* Sheet */
 .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sheet.hidden{display:none}
 .sheet-bg{position:absolute;inset:0;background:#0009}
 .sheet-panel{position:relative;background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;
-  padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto;animation:up .16s ease-out}
+  padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto}
+.sheet-panel.anim{animation:up .16s ease-out}
 @keyframes up{from{transform:translateY(30px);opacity:.5}}
 .sheet-panel h3{margin:0 0 10px;font-size:17px}
-.sheet-panel h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sheet-panel h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .sh-head .task{font-size:16px;padding:10px 12px;cursor:default}
 .note{white-space:pre-wrap;background:var(--surface2);border-radius:10px;padding:8px 10px;margin:8px 0 0;font-size:14px}
 .btn{appearance:none;border:1px solid var(--line);background:var(--surface2);border-radius:11px;padding:11px 12px;font-weight:650;cursor:pointer;text-align:center}
 .btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
 .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
 .btn.ok{background:var(--green);border-color:transparent;color:#fff}
+.btn.okl{background:#22c55e22;border-color:var(--green)}
 .btn.violet{background:var(--violet);border-color:transparent;color:#fff}
 .btn.danger{color:var(--red)}
 .btn.full{width:100%;display:block}
@@ -155,6 +177,9 @@ body.dragging .board{scroll-snap-type:none}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row{display:flex;gap:8px;align-items:center;margin-top:8px}
 .row > *{flex:1}
+.spread{display:flex;align-items:center;gap:8px;font-weight:650}
+.spread select{width:auto;flex:none;min-width:84px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
 .blk{background:#8b5cf61f;border:1px solid var(--violet);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-weight:600}
 .prio-pick{display:flex;gap:10px}
 .prio-pick label{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);cursor:pointer;flex:1}
@@ -172,7 +197,6 @@ label.chk{display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:600}
 label.chk input{width:auto}
 .date-l{display:flex;align-items:center;gap:8px;font-weight:650}
 
-/* Réglages */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 12px 12px;padding:12px}
 .card h3{margin:0 0 6px;font-size:15px}
 .card p{margin:4px 0 10px;font-size:13.5px;color:var(--muted)}
@@ -196,12 +220,14 @@ label.chk input{width:auto}
 <nav id="tabs">
   <button data-act="view" data-view="planning"><i>📅</i>Planning</button>
   <button data-act="view" data-view="tasks"><i>☰</i>Tâches</button>
+  <button data-act="view" data-view="needs"><i>🛒</i>Besoins<span class="count" id="needCount" hidden></span></button>
   <button data-act="view" data-view="settings"><i>⚙︎</i>Réglages</button>
 </nav>
 <button id="fab" data-act="new" aria-label="Nouvelle tâche">+</button>
 <div id="sheet" class="sheet hidden"><div class="sheet-bg" data-act="close"></div><div class="sheet-panel" id="sheetPanel"></div></div>
 <div id="toast"></div>
 
+<script src="logic.js"></script>
 <script>
 'use strict';
 /* ---------- utilitaires ---------- */
@@ -234,13 +260,17 @@ function weekNo(s) {
 }
 
 const PRIOS = [['red', 'Urgent'], ['orange', 'Important'], ['yellow', 'Normal'], ['white', 'Faible']];
-const PRIO_RANK = { red: 0, orange: 1, yellow: 2, white: 3 };
+const PRIO_RANK = PlanningLogic.RANK;
 const CATS = ['Projet', 'Pièce client', 'Vente', 'Autre'];
 const KEY = 'planning.v1';
+const MAX_DAYS = 14;
 
-/* ---------- état ---------- */
+/* ---------- état ----------
+   tâche : { id, title, cat, prio, status: todo|done|cancelled|blocked, note, created, doneAt, block,
+             slots: [{ d: 'AAAA-MM-JJ' | null, ok: bool, o: ordre }],   // un slot = une journée de travail
+             needs: [{ id, text, ok }] }                                  // besoins (achats, matériel…) */
 function defaults() {
-  return { tasks: [], waits: [], settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+  return { tasks: [], waits: [], settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', trayOpen: true, waitsOpen: false, theme: 'auto' } };
 }
 function load() {
   const d = defaults();
@@ -248,53 +278,81 @@ function load() {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); }
   } catch (e) {}
-  return d;
+  return PlanningLogic.migrate(d);
 }
 let S = load();
-let ui = { q: '', cur: null };
+let ui = { q: '', cur: null, slot: null };
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
   persistForSW(); queueNotify();
 }
 const find = id => S.tasks.find(t => t.id === id);
 const isActive = t => t.status === 'todo' || t.status === 'blocked';
-const isLate = t => isActive(t) && t.date && t.date < today();
-const byPrio = (a, b) => PRIO_RANK[a.prio] - PRIO_RANK[b.prio] || (a.date || '9').localeCompare(b.date || '9') || a.created - b.created;
+const slotLate = s => s.d && s.d < today() && !s.ok;
+const isLate = t => isActive(t) && t.slots.some(slotLate);
+const firstDate = t => { const ds = t.slots.filter(s => s.d && !s.ok).map(s => s.d).sort(); return ds[0] || t.slots.map(s => s.d).filter(Boolean).sort()[0] || '9'; };
+const byPrio = (a, b) => PRIO_RANK[a.prio] - PRIO_RANK[b.prio] || firstDate(a).localeCompare(firstDate(b)) || a.created - b.created;
 const waitFor = t => t.block && t.block.waitId ? S.waits.find(w => w.id === t.block.waitId) : null;
-function tasksOn(day) {
-  return S.tasks.filter(t => t.date === day).sort((a, b) =>
-    (!isActive(a)) - (!isActive(b)) || (a.order ?? 0) - (b.order ?? 0) || byPrio(a, b));
+const unmet = t => t.needs.filter(n => !n.ok);
+const unplaced = t => t.slots.filter(s => !s.d).length;
+function slotsOn(day) {
+  const r = [];
+  for (const t of S.tasks) t.slots.forEach((s, i) => { if (s.d === day) r.push({ t, i, s }); });
+  const off = x => (!isActive(x.t) || x.s.ok) ? 1 : 0;
+  return r.sort((a, b) => off(a) - off(b) || (a.s.o ?? 0) - (b.s.o ?? 0) || byPrio(a.t, b.t));
 }
-function nextOrder(day) { return Math.max(0, ...S.tasks.filter(t => t.date === day).map(t => (t.order ?? 0) + 1)); }
+function nextOrder(day) { return Math.max(0, ...slotsOn(day).map(x => (x.s.o ?? 0) + 1)); }
+function slotRank(t, i) {
+  const order = t.slots.map((_, j) => j).sort((a, b) => (t.slots[a].d || '9').localeCompare(t.slots[b].d || '9') || a - b);
+  return order.indexOf(i) + 1;
+}
+function whenText(t) {
+  const n = t.slots.length, ds = t.slots.filter(s => s.d).map(s => s.d).sort(), u = n - ds.length;
+  const parts = [];
+  if (n > 1) parts.push(`${n} jours`);
+  if (ds.length) parts.push(ds.slice(0, 3).map(fmtRel).join(', ') + (ds.length > 3 ? '…' : ''));
+  if (u) parts.push(n > 1 ? `${u} à placer` : 'non planifiée');
+  return (isLate(t) ? '⚠ en retard · ' : '') + parts.join(' · ');
+}
 
 /* ---------- rendu ---------- */
 function render(keepScroll = true) {
   const main = $('#main'), st = main.scrollTop, bl = $('.board')?.scrollLeft;
-  document.documentElement.dataset.theme = S.settings.theme === 'auto' ? '' : S.settings.theme;
   if (S.settings.theme === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.dataset.theme = S.settings.theme;
   const v = S.settings.view;
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
-  $('#fab').style.display = v === 'settings' ? 'none' : '';
+  $('#fab').style.display = v === 'settings' || v === 'needs' ? 'none' : '';
+  const nn = S.tasks.filter(isActive).reduce((k, t) => k + unmet(t).length, 0);
+  const nc = $('#needCount'); nc.hidden = !nn; nc.textContent = nn;
   renderWaits();
-  if (v === 'planning') renderPlanning(); else if (v === 'tasks') renderTasks(); else renderSettings();
+  if (v === 'planning') renderPlanning(); else if (v === 'tasks') renderTasks(); else if (v === 'needs') renderNeeds(); else renderSettings();
   if (keepScroll) { main.scrollTop = st; if (bl != null && $('.board')) $('.board').scrollLeft = bl; }
 }
 
-function chip(t, full) {
-  const cls = t.status === 'done' ? 'c-done' : t.status === 'blocked' ? 'c-blocked' : t.status === 'cancelled' ? 'c-cancel' : 'p-' + t.prio;
+// o.slot : index du jour affiché (planning) ; o.tray : dans « À planifier » ; o.full : vue liste
+function chip(t, o = {}) {
+  const s = o.slot != null ? t.slots[o.slot] : null, n = t.slots.length;
+  const done = t.status === 'done' || (s && s.ok && !o.tray);
+  const cls = done ? 'c-done' : t.status === 'blocked' ? 'c-blocked' : t.status === 'cancelled' ? 'c-cancel' : 'p-' + t.prio;
+  const late = o.full ? isLate(t) : (s && !o.tray && isActive(t) && slotLate(s));
+  let tag = '';
+  if (n > 1 && s && !o.tray && s.d) tag += `<span class="badge">j${slotRank(t, o.slot)}/${n}</span>`;
+  if (o.tray && n > 1) tag += `<span class="badge">×${unplaced(t)}</span>`;
+  const nu = unmet(t).length;
+  if (nu && isActive(t)) tag += `<span class="badge">🛒${nu}</span>`;
   let sub = '';
   if (t.status === 'blocked') {
     const w = waitFor(t);
     sub += `<span class="t-sub">⏳ ${esc(t.block?.reason || 'En attente')}${w && w.date ? ' · ' + fmtRel(w.date) : ''}</span>`;
   }
-  if (isLate(t) && !full) sub += `<span class="t-sub">⚠ en retard (${fmtRel(t.date)})</span>`;
+  if (late && !o.full) sub += `<span class="t-sub">⚠ en retard (${fmtRel(s.d)})</span>`;
   let meta = '';
-  if (full) {
+  if (o.full) {
     const dot = t.status !== 'todo' ? `<i class="pdot" data-p="${t.prio}"></i>` : '';
-    const when = t.date ? (isLate(t) ? `⚠ en retard · ${fmtRel(t.date)}` : fmtRel(t.date)) : 'non planifiée';
-    meta = `<span class="meta">${dot}${esc(t.cat)} · ${when}</span>`;
+    meta = `<span class="meta">${dot}${esc(t.cat)} · ${whenText(t)}</span>`;
   }
-  return `<div class="task ${cls}${isLate(t) ? ' late' : ''}" data-id="${t.id}" data-p="${t.prio}"><span class="t-title">${esc(t.title)}</span>${sub}${meta}</div>`;
+  return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}"><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
 }
 
 function renderPlanning() {
@@ -305,11 +363,12 @@ function renderPlanning() {
     <div class="seg"><button data-act="wk-" aria-label="Semaine précédente">‹</button><button data-act="wk0" class="${off === 0 ? 'on' : ''}">Auj.</button><button data-act="wk+" aria-label="Semaine suivante">›</button></div>
     <div class="seg"><button data-act="n-" aria-label="Moins de semaines">−</button><span class="seg-l">${n} sem.</span><button data-act="n+" aria-label="Plus de semaines">+</button></div>`;
   let h = '';
-  const late = S.tasks.filter(isLate);
-  if (late.length) h += `<div class="banner"><span>⚠ ${late.length} tâche${late.length > 1 ? 's' : ''} en retard</span><button class="btn sm" data-act="late-today">Tout mettre à aujourd'hui</button></div>`;
-  const unpl = S.tasks.filter(x => !x.date && isActive(x)).sort(byPrio);
-  h += `<section class="tray" data-drop="none"><div class="tray-h" data-act="tray"><b>À planifier (${unpl.length})</b><span>${S.settings.trayOpen ? '▾' : '▸'}</span></div>`;
-  if (S.settings.trayOpen) h += `<div class="tasks">${unpl.map(x => chip(x)).join('') || '<span class="empty">Rien à planifier. Glisse une tâche ici pour la retirer du planning.</span>'}</div>`;
+  const nl = S.tasks.filter(isActive).reduce((k, x) => k + x.slots.filter(slotLate).length, 0);
+  if (nl) h += `<div class="banner"><span>⚠ ${nl} tâche${nl > 1 ? 's' : ''} en retard</span><button class="btn sm" data-act="late-today">Tout mettre à aujourd'hui</button></div>`;
+  const unpl = S.tasks.filter(x => isActive(x) && unplaced(x)).sort(byPrio);
+  const nu = unpl.reduce((k, x) => k + unplaced(x), 0);
+  h += `<section class="tray" data-drop="none"><div class="tray-h" data-act="tray"><b>À planifier (${nu})</b><span>${S.settings.trayOpen ? '▾' : '▸'}</span></div>`;
+  if (S.settings.trayOpen) h += `<div class="tasks">${unpl.map(x => chip(x, { slot: x.slots.findIndex(s => !s.d), tray: true })).join('') || '<span class="empty">Rien à planifier. Glisse une tâche ici pour la retirer du planning.</span>'}</div>`;
   h += `</section><div class="board" style="--colw:max(calc(100% / ${n}), 148px)">`;
   for (let w = 0; w < n; w++) {
     const ws = addDays(base, w * 7), we = addDays(ws, 6);
@@ -320,7 +379,7 @@ function renderPlanning() {
       const waits = S.waits.filter(x => x.date === day);
       h += `<div class="day${day === t ? ' today' : ''}${day < t ? ' past' : ''}${d >= 5 ? ' we' : ''}" data-drop="${day}">
         <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span><button class="add" data-act="add-day" data-day="${day}" aria-label="Ajouter une tâche">+</button></div>
-        <div class="tasks">${tasksOn(day).map(x => chip(x)).join('')}</div>
+        <div class="tasks">${slotsOn(day).map(x => chip(x.t, { slot: x.i })).join('')}</div>
         ${waits.map(x => `<div class="day-wait" data-act="waits-open">📦 ${esc(x.title)}</div>`).join('')}
       </div>`;
     }
@@ -344,18 +403,36 @@ function renderTasks() {
 }
 function listHTML() {
   const f = S.settings.filter, c = S.settings.cat, q = ui.q.trim().toLowerCase();
-  const all = S.tasks.filter(t => (!c || t.cat === c) && (!q || (t.title + ' ' + (t.note || '')).toLowerCase().includes(q)));
-  const byDate = (a, b) => (a.date || '9').localeCompare(b.date || '9') || a.created - b.created;
+  const all = S.tasks.filter(t => (!c || t.cat === c) && (!q || [t.title, t.note, ...t.needs.map(n => n.text)].join(' ').toLowerCase().includes(q)));
+  const byDate = (a, b) => firstDate(a).localeCompare(firstDate(b)) || a.created - b.created;
   const groups = [];
-  if (f === 'active' || f === 'all') {
-    for (const [k, l] of PRIOS) groups.push([l, `var(--${k === 'white' ? 'white' : k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
-  }
+  if (f === 'active' || f === 'all') for (const [k, l] of PRIOS) groups.push([l, `var(--${k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
   if (['active', 'blocked', 'all'].includes(f)) groups.push(['Bloquées / en attente', 'var(--violet)', all.filter(t => t.status === 'blocked').sort(byPrio)]);
   if (f === 'done' || f === 'all') groups.push(['Terminées', 'var(--green)', all.filter(t => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))]);
   if (f === 'cancelled' || f === 'all') groups.push(['Barrées', 'var(--surface2)', all.filter(t => t.status === 'cancelled').sort(byPrio)]);
   const html = groups.filter(g => g[2].length).map(([l, col, ts]) =>
-    `<div class="group"><h3><span class="sw" style="background:${col}"></span>${l} · ${ts.length}</h3>${ts.map(t => chip(t, true)).join('')}</div>`).join('');
+    `<div class="group"><h3><span class="sw" style="background:${col}"></span>${l} · ${ts.length}</h3>${ts.map(t => chip(t, { full: true })).join('')}</div>`).join('');
   return html || `<p class="empty" style="text-align:center;padding:30px 20px">Aucune tâche ici.<br>Touche <b>+</b> pour en ajouter une.</p>`;
+}
+
+function needRow(t, n) {
+  return `<div class="need${n.ok ? ' ok' : ''}"><button class="ck" data-act="need-tog" data-tid="${t.id}" data-nid="${n.id}" aria-label="${n.ok ? 'Marquer à obtenir' : 'Marquer obtenu'}">${n.ok ? '✓' : ''}</button><span>${esc(n.text)}</span><button class="x" data-act="need-del" data-tid="${t.id}" data-nid="${n.id}" aria-label="Supprimer">✕</button></div>`;
+}
+function renderNeeds() {
+  $('#viewTitle').textContent = 'Besoins';
+  $('#headerTools').innerHTML = '';
+  const f = S.settings.needsF;
+  const live = S.tasks.filter(t => t.status !== 'cancelled');
+  const cnt = ok => live.filter(t => ok || isActive(t)).reduce((k, t) => k + t.needs.filter(n => n.ok === ok).length, 0);
+  const tasks = live.filter(t => (f === 'ok' || isActive(t)) && t.needs.some(n => n.ok === (f === 'ok'))).sort(byPrio);
+  const act = S.tasks.filter(isActive).sort(byPrio);
+  $('#main').innerHTML = `
+    <div class="chips"><button class="chip${f === 'todo' ? ' on' : ''}" data-act="needsF" data-v="todo">À obtenir<span class="n">${cnt(false)}</span></button><button class="chip${f === 'ok' ? ' on' : ''}" data-act="needsF" data-v="ok">Obtenus<span class="n">${cnt(true)}</span></button></div>
+    ${act.length ? `<form id="needForm2" class="add-need">
+      <select name="task" aria-label="Tâche">${act.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select>
+      <div class="row2"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160"><button class="btn primary">Ajouter</button></div></form>` : ''}
+    ${tasks.map(t => `<div class="need-card">${chip(t, { full: true })}${t.needs.filter(n => n.ok === (f === 'ok')).map(n => needRow(t, n)).join('')}</div>`).join('')
+      || `<p class="empty" style="text-align:center;padding:30px 20px">${f === 'ok' ? 'Rien d’obtenu pour l’instant.' : 'Aucun besoin en attente 👍<br>Ajoute-en depuis une tâche ou avec le formulaire ci-dessus.'}</p>`}`;
 }
 
 function waitWhen(w) {
@@ -394,7 +471,7 @@ function renderSettings() {
   const permTxt = { granted: '✅ Activées', denied: '⛔ Bloquées dans les réglages du navigateur', default: 'Pas encore activées', unsupported: '⚠ Non disponibles ici' }[perm];
   $('#main').innerHTML = `
   <div class="card"><h3>🔔 Notifications</h3>
-    <p>Une notification résume en permanence les tâches du jour, celles en retard et les colis attendus. Elle se met à jour à chaque ouverture de l'app et à chaque changement.<br><b>${permTxt}</b></p>
+    <p>Une notification résume en permanence les tâches du jour, celles en retard, les colis attendus et les besoins à obtenir. Elle se met à jour à chaque ouverture de l'app et à chaque changement.<br><b>${permTxt}</b></p>
     <button class="btn primary" data-act="notif-on">Activer</button><button class="btn" data-act="notif-test">Tester</button>
     <p style="margin-top:6px">Sur iPhone : ouvrir dans Safari → Partager → « Sur l'écran d'accueil », puis activer depuis l'app installée. Sur Android : menu Chrome → « Installer l'application ».</p></div>
   <div class="card"><h3>🎨 Couleurs</h3><div class="legend">
@@ -405,7 +482,8 @@ function renderSettings() {
     <span class="task c-done"><span class="t-title">Vert</span></span><span>Terminée</span>
     <span class="task c-blocked">Violet</span><span>Bloquée (en attente de quelque chose)</span>
     <span class="task c-cancel" data-p="orange"><span class="t-title">Barrée</span></span><span>Abandonnée</span></div>
-    <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter ou la bloquer.</p></div>
+    <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter, l'étaler sur plusieurs jours, lui ajouter des besoins ou la bloquer.<br>
+    <b>j2/3</b> = 2ᵉ jour sur 3 · <b>×2</b> = 2 jours encore à placer · <b>🛒2</b> = 2 besoins à obtenir.</p></div>
   <div class="card"><h3>Thème</h3>
     <div class="seg" style="display:inline-flex">${[['auto', 'Auto'], ['light', 'Clair'], ['dark', 'Sombre']].map(([k, l]) => `<button data-act="theme" data-v="${k}" class="${S.settings.theme === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
   <div class="card"><h3>💾 Sauvegarde</h3>
@@ -415,35 +493,61 @@ function renderSettings() {
 }
 
 /* ---------- bottom sheet ---------- */
-function openSheet(html) { $('#sheetPanel').innerHTML = html; $('#sheet').classList.remove('hidden'); }
-function closeSheet() { $('#sheet').classList.add('hidden'); ui.cur = null; }
+function openSheet(html, keep) {
+  const p = $('#sheetPanel'), st = p.scrollTop, wasOpen = !$('#sheet').classList.contains('hidden');
+  p.innerHTML = html; $('#sheet').classList.remove('hidden');
+  p.classList.toggle('anim', !(keep && wasOpen));
+  p.scrollTop = keep && wasOpen ? st : 0;
+}
+function closeSheet() { $('#sheet').classList.add('hidden'); ui.cur = null; ui.slot = null; }
 const B = (act, label, cls = '', extra = '') => `<button class="btn ${cls}" data-act="${act}" ${extra}>${label}</button>`;
 
-function openTask(id) {
-  const t = find(id); if (!t) return; ui.cur = id;
-  const w = waitFor(t);
+function defSlot(t) {
+  let best = -1;
+  t.slots.forEach((s, i) => { if (!s.ok && s.d && (best < 0 || s.d < t.slots[best].d)) best = i; });
+  if (best < 0) best = t.slots.findIndex(s => !s.d);
+  return best < 0 ? 0 : best;
+}
+function curSlot(t) { return ui.slot != null && t.slots[ui.slot] ? ui.slot : defSlot(t); }
+
+function openTask(id, slot, keep) {
+  const t = find(id); if (!t) return;
+  ui.cur = id; ui.slot = slot != null && t.slots[slot] ? slot : defSlot(t);
+  const i = ui.slot, s = t.slots[i], n = t.slots.length, w = waitFor(t), nu = unmet(t).length;
+  const multi = n > 1;
   openSheet(`
-    <div class="sh-head">${chip(t)}<div class="muted" style="margin-top:6px;font-size:13px">${esc(t.cat)} · ${t.date ? fmtRel(t.date) : 'non planifiée'}</div>
+    <div class="sh-head">${chip(t, { slot: i })}<div class="muted" style="margin-top:6px;font-size:13px">${esc(t.cat)} · ${whenText(t)}</div>
+    ${multi ? `<div class="hint">Jour sélectionné : <b>${s.d ? `j${slotRank(t, i)}/${n} · ${fmtRel(s.d)}` : 'pas encore placé'}</b></div>` : ''}
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}</div>
     <h4>État</h4>
+    ${multi && s.d && isActive(t) ? `<div style="margin-bottom:8px">${s.ok ? B('slot-ok', '↺ Journée à refaire', 'full') : B('slot-ok', '✓ Journée faite', 'okl full')}</div>` : ''}
     <div class="grid2">
-      ${t.status === 'done' ? B('reopen', '↺ Rouvrir') : B('done', '✓ Terminé', 'ok')}
+      ${t.status === 'done' ? B('reopen', '↺ Rouvrir') : B('done', multi ? '✓ Tâche terminée' : '✓ Terminé', 'ok')}
       ${t.status === 'cancelled' ? B('reopen', '↺ Rétablir') : B('cancel', '<s>Barrer</s>')}
     </div>
-    <h4>Reporter</h4>
+    <h4>${multi ? 'Reporter ce jour' : 'Reporter'}</h4>
     <div class="grid3">${B('to-today', "Aujourd'hui")}${B('plus1', '+1 jour')}${B('plus7', '+1 semaine')}</div>
-    <div class="row"><label class="date-l">📅<input type="date" id="pickDate" value="${t.date || ''}"></label>${t.date ? B('unplan', 'Retirer du planning') : ''}</div>
+    <div class="row"><label class="date-l">📅<input type="date" id="pickDate" value="${s.d || ''}"></label>${s.d ? B('unplan', 'Retirer du planning') : ''}</div>
+    <h4>Durée</h4>
+    <label class="spread">Étaler sur
+      <select id="daysSel">${Array.from({ length: MAX_DAYS }, (_, k) => `<option value="${k + 1}"${k + 1 === n ? ' selected' : ''}>${k + 1} jour${k ? 's' : ''}</option>`).join('')}</select></label>
+    <div class="hint">${unplaced(t) ? `${unplaced(t)} jour${unplaced(t) > 1 ? 's' : ''} à placer : glisse la tâche depuis « À planifier » autant de fois que nécessaire.` : multi ? 'Tous les jours sont placés dans le planning.' : 'Choisis plusieurs jours pour pouvoir placer la tâche sur plusieurs cases.'}</div>
+    <h4>Besoins${nu ? ` · ${nu} à obtenir` : ''}</h4>
+    <div>${t.needs.map(x => needRow(t, x)).join('')}</div>
+    <form id="needForm" class="need-add"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160"><button class="btn">Ajouter</button></form>
     <h4>Contrainte</h4>
     ${t.status === 'blocked'
       ? `<div class="blk">⏳ En attente : ${esc(t.block?.reason || '')}${w && w.date ? ` · prévu ${fmtRel(w.date)}` : ''}</div>${B('unblock', 'Débloquer (c\'est arrivé)', 'full')}`
       : B('block', '⏳ Bloquer — en attente de…', 'violet full')}
     <h4>Importance</h4>
     <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><button class="p-${k}${t.prio === k ? ' on' : ''}" data-act="prio" data-v="${k}" aria-label="${l}"></button>${l}</label>`).join('')}</div>
-    <div class="grid2" style="margin-top:16px">${B('edit', '✎ Modifier')}${B('del', '🗑 Supprimer', 'danger')}</div>`);
+    <div class="grid2" style="margin-top:16px">${B('edit', '✎ Modifier')}${B('del', '🗑 Supprimer', 'danger')}</div>`, keep);
 }
 
+function daysOptions(n) { return Array.from({ length: MAX_DAYS }, (_, k) => `<option value="${k + 1}"${k + 1 === n ? ' selected' : ''}>${k + 1} jour${k ? 's' : ''}</option>`).join(''); }
 function openForm(t, preset = {}) {
-  const v = t || { title: '', cat: preset.cat || CATS[0], prio: 'yellow', date: preset.date || '', note: '' };
+  const v = t || { title: '', cat: preset.cat || CATS[0], prio: 'yellow', note: '', slots: [{ d: preset.date || null }] };
+  const n = v.slots.length;
   ui.cur = t ? t.id : null;
   openSheet(`<h3>${t ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
     <form id="taskForm" autocomplete="off">
@@ -452,9 +556,13 @@ function openForm(t, preset = {}) {
       <div class="cat-pick">${CATS.map(c => `<label><input type="radio" name="cat" value="${c}"${c === v.cat ? ' checked' : ''}><span>${c}</span></label>`).join('')}</div>
       <div class="lbl">Importance</div>
       <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><input type="radio" name="prio" value="${k}"${k === v.prio ? ' checked' : ''}><span class="circle p-${k}"></span>${l}</label>`).join('')}</div>
-      <div class="lbl">Jour</div>
-      <input type="date" name="date" value="${v.date || ''}">
-      <div class="grid3" style="margin-top:8px">${B('fd', 'Aucun', '', 'type="button" data-v=""')}${B('fd', "Aujourd'hui", '', `type="button" data-v="${today()}"`)}${B('fd', 'Demain', '', `type="button" data-v="${addDays(today(), 1)}"`)}</div>
+      ${n === 1 ? `<div class="lbl">${t ? 'Jour' : 'Premier jour'}</div>
+      <input type="date" name="date" value="${v.slots[0].d || ''}">
+      <div class="grid3" style="margin-top:8px">${B('fd', 'Aucun', '', 'type="button" data-v=""')}${B('fd', "Aujourd'hui", '', `type="button" data-v="${today()}"`)}${B('fd', 'Demain', '', `type="button" data-v="${addDays(today(), 1)}"`)}</div>` : ''}
+      <div class="lbl">Durée</div>
+      <label class="spread">Étaler sur <select name="days">${daysOptions(n)}</select></label>
+      <div class="hint">Les jours en plus vont dans « À planifier » : tu les glisses ensuite sur les jours voulus.</div>
+      ${t ? '' : `<div class="lbl">Besoins (un par ligne)</div><textarea name="needs" placeholder="Ex :&#10;2 paquets de vis&#10;Colle à bois"></textarea>`}
       <div class="lbl">Note</div>
       <textarea name="note" placeholder="Détails, client, prix…">${esc(v.note)}</textarea>
       <button class="btn primary full" style="margin-top:14px">${t ? 'Enregistrer' : 'Ajouter'}</button>
@@ -478,64 +586,101 @@ function openBlock(t) {
 /* ---------- actions ---------- */
 function setStatus(t, s) {
   if (t.status === 'blocked' && s !== 'blocked') S.waits = S.waits.filter(w => w.taskId !== t.id);
+  if (s === 'done') t.slots.forEach(x => x.ok = true);
+  if (t.status === 'done' && s === 'todo') t.slots.forEach(x => x.ok = false);
   t.status = s; t.doneAt = s === 'done' ? today() : null;
   if (s !== 'blocked') t.block = null;
 }
-function moveTo(t, date) {
-  t.date = date; t.order = date ? nextOrder(date) : 0;
+// déplace le jour i de la tâche ; refuse si la tâche est déjà prévue ce jour-là
+function moveSlot(t, i, date) {
+  if (date && t.slots.some((x, j) => j !== i && x.d === date)) { toast(`Déjà prévue ${fmtRel(date)}`); return false; }
+  const s = t.slots[i]; s.d = date; s.o = date ? nextOrder(date) : 0;
   if (t.status === 'cancelled') t.status = 'todo';
+  return true;
 }
-const baseDay = t => t.date && t.date > today() ? t.date : today();
+function freeDay(t, i, from) { let d = from; while (t.slots.some((x, j) => j !== i && x.d === d)) d = addDays(d, 1); return d; }
+function setDays(t, n) {
+  n = Math.max(1, Math.min(MAX_DAYS, n));
+  while (t.slots.length < n) t.slots.push({ d: null, ok: false, o: 0 });
+  while (t.slots.length > n) {
+    let j = t.slots.findIndex(s => !s.d);                          // d'abord les jours non placés
+    if (j < 0) { j = 0; t.slots.forEach((s, k) => { if ((s.d || '') >= (t.slots[j].d || '')) j = k; }); } // sinon le plus tardif
+    t.slots.splice(j, 1);
+  }
+}
+const baseDay = s => s.d && s.d > today() ? s.d : today();
 function commit(msg, undo) { save(); render(); if (msg) toast(msg, undo); }
-function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; commit(); }; }
+function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; closeSheet(); commit(); }; }
+function refreshSheet() { if (ui.cur && !$('#sheet').classList.contains('hidden') && $('#daysSel')) openTask(ui.cur, ui.slot, true); }
 
 function act(a, el, e) {
   const t = ui.cur && find(ui.cur);
   switch (a) {
-    case 'view': S.settings.view = el.dataset.view; S.settings.waitsOpen = false; save(); closeSheet(); render(false); $('#main').scrollTop = 0; if (el.dataset.view === 'planning') scrollToToday(); break;
-    case 'new': openForm(null, { date: S.settings.view === 'planning' ? today() : '', cat: S.settings.view === 'tasks' && S.settings.cat || undefined }); break;
-    case 'add-day': openForm(null, { date: el.dataset.day }); break;
-    case 'close': closeSheet(); break;
-    case 'wk-': S.settings.offset--; save(); render(); break;
-    case 'wk+': S.settings.offset++; save(); render(); break;
-    case 'wk0': S.settings.offset = 0; save(); render(); scrollToToday(); break;
-    case 'n-': S.settings.weeks = Math.max(1, S.settings.weeks - 1); save(); render(); break;
-    case 'n+': S.settings.weeks = Math.min(8, S.settings.weeks + 1); save(); render(); break;
-    case 'tray': S.settings.trayOpen = !S.settings.trayOpen; save(); render(); break;
-    case 'late-today': { const u = snapshot(); const l = S.tasks.filter(isLate); l.forEach(x => moveTo(x, today())); commit(`${l.length} tâche(s) déplacée(s) à aujourd'hui`, u); break; }
-    case 'waits': S.settings.waitsOpen = !S.settings.waitsOpen; save(); renderWaits(); break;
-    case 'waits-open': S.settings.waitsOpen = true; save(); renderWaits(); break;
+    case 'view': S.settings.view = el.dataset.view; S.settings.waitsOpen = false; save(); closeSheet(); render(false); $('#main').scrollTop = 0; if (el.dataset.view === 'planning') scrollToToday(); return;
+    case 'new': openForm(null, { date: S.settings.view === 'planning' ? today() : '', cat: S.settings.view === 'tasks' && S.settings.cat || undefined }); return;
+    case 'add-day': openForm(null, { date: el.dataset.day }); return;
+    case 'close': closeSheet(); return;
+    case 'wk-': S.settings.offset--; save(); render(); return;
+    case 'wk+': S.settings.offset++; save(); render(); return;
+    case 'wk0': S.settings.offset = 0; save(); render(); scrollToToday(); return;
+    case 'n-': S.settings.weeks = Math.max(1, S.settings.weeks - 1); save(); render(); return;
+    case 'n+': S.settings.weeks = Math.min(8, S.settings.weeks + 1); save(); render(); return;
+    case 'tray': S.settings.trayOpen = !S.settings.trayOpen; save(); render(); return;
+    case 'late-today': {
+      const u = snapshot(); let k = 0;
+      for (const x of S.tasks.filter(isActive)) x.slots.forEach((s, i) => { if (slotLate(s)) { k++; moveSlot(x, i, freeDay(x, i, today())); } });
+      commit(`${k} tâche(s) déplacée(s) à aujourd'hui`, u); return;
+    }
+    case 'waits': S.settings.waitsOpen = !S.settings.waitsOpen; save(); renderWaits(); return;
+    case 'waits-open': S.settings.waitsOpen = true; save(); renderWaits(); return;
     case 'w-ok': {
-      const w = S.waits.find(x => x.id === el.dataset.id); if (!w) break;
+      const w = S.waits.find(x => x.id === el.dataset.id); if (!w) return;
       const u = snapshot(); const task = w.taskId && find(w.taskId);
       S.waits = S.waits.filter(x => x !== w);
       if (task && task.status === 'blocked') { task.status = 'todo'; task.block = null; commit(`Reçu ! « ${task.title} » est débloquée`, u); }
       else commit(`« ${w.title} » reçu`, u);
-      break;
+      return;
     }
-    case 'w-del': { const u = snapshot(); const w = S.waits.find(x => x.id === el.dataset.id); S.waits = S.waits.filter(x => x !== w); commit('Attente supprimée', u); break; }
-    case 'filter': S.settings.filter = el.dataset.v; save(); render(false); break;
-    case 'cat': S.settings.cat = el.dataset.v; save(); render(false); break;
-    case 'fd': $('#taskForm [name=date]').value = el.dataset.v; break;
-    case 'theme': S.settings.theme = el.dataset.v; save(); render(); break;
-    case 'notif-on': enableNotif(); break;
-    case 'notif-test': notify(true); break;
-    case 'export': exportData(); break;
-    case 'purge': { const u = snapshot(); const n = S.tasks.filter(x => !isActive(x)).length; S.tasks = S.tasks.filter(isActive); commit(`${n} tâche(s) effacée(s)`, u); break; }
+    case 'w-del': { const u = snapshot(); S.waits = S.waits.filter(x => x.id !== el.dataset.id); commit('Attente supprimée', u); return; }
+    case 'need-tog': case 'need-del': {
+      const tk = find(el.dataset.tid); if (!tk) return;
+      const u = snapshot();
+      if (a === 'need-del') { tk.needs = tk.needs.filter(x => x.id !== el.dataset.nid); commit('Besoin supprimé', u); }
+      else { const nd = tk.needs.find(x => x.id === el.dataset.nid); if (!nd) return; nd.ok = !nd.ok; commit(nd.ok ? `Obtenu : ${nd.text}` : `À obtenir : ${nd.text}`, u); }
+      refreshSheet(); return;
+    }
+    case 'needsF': S.settings.needsF = el.dataset.v; save(); render(false); return;
+    case 'filter': S.settings.filter = el.dataset.v; save(); render(false); return;
+    case 'cat': S.settings.cat = el.dataset.v; save(); render(false); return;
+    case 'fd': $('#taskForm [name=date]').value = el.dataset.v; return;
+    case 'theme': S.settings.theme = el.dataset.v; save(); render(); return;
+    case 'notif-on': enableNotif(); return;
+    case 'notif-test': notify(true); return;
+    case 'export': exportData(); return;
+    case 'purge': { const u = snapshot(); const n = S.tasks.filter(x => !isActive(x)).length; S.tasks = S.tasks.filter(isActive); commit(`${n} tâche(s) effacée(s)`, u); return; }
   }
   if (!t) return;
-  const u = snapshot();
+  const u = snapshot(), i = curSlot(t), s = t.slots[i];
   switch (a) {
+    case 'slot-ok': {
+      s.ok = !s.ok;
+      if (t.slots.every(x => x.ok)) { setStatus(t, 'done'); closeSheet(); commit('Dernier jour fait : tâche terminée ✓', u); }
+      else { commit(s.ok ? `Journée faite (${t.slots.filter(x => x.ok).length}/${t.slots.length})` : 'Journée à refaire', u); refreshSheet(); }
+      break;
+    }
     case 'done': setStatus(t, 'done'); closeSheet(); commit('Terminée ✓', u); break;
     case 'cancel': setStatus(t, 'cancelled'); closeSheet(); commit('Tâche barrée', u); break;
     case 'reopen': setStatus(t, 'todo'); closeSheet(); commit('Tâche rouverte', u); break;
-    case 'to-today': moveTo(t, today()); closeSheet(); commit("Reportée à aujourd'hui", u); break;
-    case 'plus1': moveTo(t, addDays(baseDay(t), 1)); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u); break;
-    case 'plus7': moveTo(t, addDays(baseDay(t), 7)); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u); break;
-    case 'unplan': moveTo(t, null); closeSheet(); commit('Retirée du planning', u); break;
+    case 'to-today': if (moveSlot(t, i, today())) { closeSheet(); commit("Reportée à aujourd'hui", u); } break;
+    case 'plus1': case 'plus7': {
+      const d = freeDay(t, i, addDays(baseDay(s), a === 'plus1' ? 1 : 7));
+      if (moveSlot(t, i, d)) { closeSheet(); commit(`Reportée à ${fmtRel(d)}`, u); }
+      break;
+    }
+    case 'unplan': moveSlot(t, i, null); closeSheet(); commit('Retirée du planning', u); break;
     case 'block': openBlock(t); break;
     case 'unblock': setStatus(t, 'todo'); closeSheet(); commit('Tâche débloquée', u); break;
-    case 'prio': t.prio = el.dataset.v; save(); render(); openTask(t.id); break;
+    case 'prio': t.prio = el.dataset.v; commit(); refreshSheet(); break;
     case 'edit': openForm(t); break;
     case 'del': S.tasks = S.tasks.filter(x => x !== t); S.waits = S.waits.filter(w => w.taskId !== t.id); closeSheet(); commit('Tâche supprimée', u); break;
   }
@@ -546,7 +691,7 @@ document.addEventListener('click', e => {
   const a = e.target.closest('[data-act]');
   if (a) { act(a.dataset.act, a, e); return; }
   const tk = e.target.closest('.task[data-id]');
-  if (tk && !tk.closest('.sheet')) openTask(tk.dataset.id);
+  if (tk && !tk.closest('.sheet')) openTask(tk.dataset.id, tk.dataset.slot === '' ? null : +tk.dataset.slot);
 });
 document.addEventListener('submit', e => {
   e.preventDefault();
@@ -554,10 +699,18 @@ document.addEventListener('submit', e => {
   if (f.id === 'taskForm') {
     const title = (fd.get('title') || '').trim(); if (!title) return;
     const data = { title, cat: fd.get('cat') || 'Autre', prio: fd.get('prio') || 'yellow', note: (fd.get('note') || '').trim() };
-    const date = fd.get('date') || null;
+    const date = fd.get('date') || null, days = +fd.get('days') || 1;
     const t = ui.cur && find(ui.cur);
-    if (t) { Object.assign(t, data); if (t.date !== date) moveTo(t, date); closeSheet(); commit('Enregistrée'); }
-    else { S.tasks.push({ id: uid(), ...data, status: 'todo', date, order: date ? nextOrder(date) : 0, created: Date.now(), block: null }); closeSheet(); commit('Tâche ajoutée'); }
+    if (t) {
+      Object.assign(t, data);
+      if (fd.has('date') && t.slots[0].d !== date) moveSlot(t, 0, date);
+      setDays(t, days); closeSheet(); commit('Enregistrée');
+    } else {
+      const needs = String(fd.get('needs') || '').split('\n').map(x => x.trim()).filter(Boolean).map(text => ({ id: uid(), text, ok: false }));
+      const nt = { id: uid(), ...data, status: 'todo', slots: [{ d: date, ok: false, o: date ? nextOrder(date) : 0 }], needs, created: Date.now(), block: null };
+      setDays(nt, days); S.tasks.push(nt); closeSheet();
+      commit(days > 1 ? `Tâche ajoutée · ${unplaced(nt)} jour(s) à placer` : 'Tâche ajoutée');
+    }
   } else if (f.id === 'blockForm') {
     const t = ui.cur && find(ui.cur); if (!t) return;
     const reason = (fd.get('reason') || '').trim(); if (!reason) return;
@@ -570,12 +723,27 @@ document.addEventListener('submit', e => {
     const title = (fd.get('title') || '').trim(); if (!title) return;
     S.waits.push({ id: uid(), title, date: fd.get('date') || null, taskId: null });
     commit('Attente ajoutée');
+  } else if (f.id === 'needForm' || f.id === 'needForm2') {
+    const t = find(f.id === 'needForm' ? ui.cur : fd.get('task')), text = (fd.get('text') || '').trim();
+    if (!t || !text) return;
+    t.needs.push({ id: uid(), text, ok: false });
+    commit('Besoin ajouté');
+    if (f.id === 'needForm') { refreshSheet(); $('#needForm [name=text]')?.focus(); }
+    else { const sel = $('#needForm2 [name=task]'); if (sel) sel.value = t.id; $('#needForm2 [name=text]')?.focus(); }
   }
 });
 document.addEventListener('change', e => {
+  const t = ui.cur && find(ui.cur);
   if (e.target.id === 'pickDate') {
-    const t = ui.cur && find(ui.cur); if (!t || !e.target.value) return;
-    const u = snapshot(); moveTo(t, e.target.value); closeSheet(); commit(`Reportée à ${fmtRel(t.date)}`, u);
+    if (!t || !e.target.value) return;
+    const u = snapshot();
+    if (moveSlot(t, curSlot(t), e.target.value)) { closeSheet(); commit(`Reportée à ${fmtRel(e.target.value)}`, u); }
+  } else if (e.target.id === 'daysSel') {
+    if (!t) return;
+    const u = snapshot(); setDays(t, +e.target.value);
+    const k = unplaced(t);
+    commit(`Étalée sur ${t.slots.length} jour${t.slots.length > 1 ? 's' : ''}${k ? ` · ${k} à placer dans « À planifier »` : ''}`, u);
+    ui.slot = null; refreshSheet();
   } else if (e.target.id === 'importFile') importData(e.target.files[0]);
 });
 document.addEventListener('input', e => {
@@ -599,7 +767,7 @@ const pt = e => { const p = e.touches ? (e.touches[0] || e.changedTouches[0]) : 
 function onStart(e) {
   if (e.button > 0 || drag) return;
   const el = e.target.closest('.task[data-id]');
-  if (!el || !el.closest('[data-drop]')) return;
+  if (!el || !el.closest('[data-drop]') || el.dataset.slot === '') return;
   const p = pt(e), touch = !!e.touches;
   pending = { el, touch, x0: p.x, y0: p.y, x: p.x, y: p.y };
   if (touch) pending.timer = setTimeout(beginDrag, 300);
@@ -610,7 +778,7 @@ function beginDrag() {
   const ghost = el.cloneNode(true); ghost.classList.add('ghost');
   ghost.style.width = r.width + 'px'; document.body.appendChild(ghost);
   const line = document.createElement('div'); line.className = 'drop-line';
-  drag = { el, id: el.dataset.id, ghost, line, dx: x - r.left, dy: y - r.top, x, y, x0: pending.x0, y0: pending.y0, moved: false, zone: null, before: null };
+  drag = { el, id: el.dataset.id, slot: +el.dataset.slot, ghost, line, dx: x - r.left, dy: y - r.top, x, y, x0: pending.x0, y0: pending.y0, moved: false, zone: null, before: null };
   pending = null;
   el.classList.add('drag-src'); document.body.classList.add('dragging');
   navigator.vibrate?.(12);
@@ -664,20 +832,25 @@ function onEnd(e) {
   d.el.classList.remove('drag-src'); document.body.classList.remove('dragging');
   justDragged = Date.now();
   if (e.cancelable) e.preventDefault();
-  if (!d.moved) { openTask(d.id); return; }   // appui long sans bouger = ouvrir le menu
+  if (!d.moved) { openTask(d.id, d.slot); return; }   // appui long sans bouger = ouvrir le menu
   if (!d.zone) return;
-  const t = find(d.id); if (!t) return;
-  const u = snapshot();
+  const t = find(d.id); if (!t || !t.slots[d.slot]) return;
   const target = d.zone.dataset.drop === 'none' ? null : d.zone.dataset.drop;
-  const changedDay = t.date !== target;
-  t.date = target;
+  const s = t.slots[d.slot], changedDay = s.d !== target;
+  if (target && t.slots.some((x, j) => j !== d.slot && x.d === target)) { toast(`Déjà prévue ${fmtRel(target)}`); return; }
+  const u = snapshot();
+  s.d = target;
+  if (t.status === 'cancelled' && target) t.status = 'todo';
   if (target) {
-    const ids = [...d.zone.querySelectorAll('.tasks .task[data-id]')].map(x => x.dataset.id).filter(id => id !== t.id);
-    const idx = d.before ? ids.indexOf(d.before.dataset.id) : ids.length;
-    ids.splice(idx < 0 ? ids.length : idx, 0, t.id);
-    ids.forEach((id, i) => { const x = find(id); if (x) x.order = i; });
-  }
-  if (changedDay) commit(target ? `Déplacée à ${fmtRel(target)}` : 'Retirée du planning', u); else commit();
+    const me = t.id + ':' + d.slot;
+    const keys = [...d.zone.querySelectorAll('.tasks .task[data-id]')].map(x => x.dataset.id + ':' + x.dataset.slot).filter(k => k !== me);
+    const idx = d.before ? keys.indexOf(d.before.dataset.id + ':' + d.before.dataset.slot) : keys.length;
+    keys.splice(idx < 0 ? keys.length : idx, 0, me);
+    keys.forEach((k, j) => { const [id, si] = k.split(':'); const x = find(id); if (x && x.slots[+si]) x.slots[+si].o = j; });
+  } else s.o = 0;
+  if (!changedDay) { commit(); return; }
+  const left = unplaced(t);
+  commit(target ? `Placée ${fmtRel(target)}${t.slots.length > 1 && left ? ` · encore ${left} jour${left > 1 ? 's' : ''} à placer` : ''}` : 'Retirée du planning', u);
 }
 const mainEl = $('#main');
 mainEl.addEventListener('touchstart', onStart, { passive: true });
@@ -691,7 +864,7 @@ mainEl.addEventListener('contextmenu', e => { if (e.target.closest('.task')) e.p
 
 /* ---------- sauvegarde fichier ---------- */
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: 'planning', v: 1, tasks: S.tasks, waits: S.waits }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'planning', v: 2, tasks: S.tasks, waits: S.waits }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planning-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
@@ -701,29 +874,13 @@ function importData(file) {
     const x = JSON.parse(txt);
     if (!Array.isArray(x.tasks)) throw new Error('format');
     if (!confirm(`Remplacer les données actuelles par ce fichier (${x.tasks.length} tâches) ?`)) return;
-    const u = snapshot(); S.tasks = x.tasks; S.waits = x.waits || []; commit('Import terminé', u);
+    const u = snapshot(); const m = PlanningLogic.migrate({ tasks: x.tasks, waits: x.waits || [] });
+    S.tasks = m.tasks; S.waits = m.waits; commit('Import terminé', u);
   }).catch(() => toast('Fichier invalide'));
 }
 
 /* ---------- notifications ---------- */
 const NOTIF_TAG = 'planning-resume';
-function buildSummary(st) {
-  const t = today();
-  const act = st.tasks.filter(x => x.status === 'todo' || x.status === 'blocked');
-  const late = act.filter(x => x.date && x.date < t).sort(byPrio);
-  const tod = act.filter(x => x.date === t).sort(byPrio);
-  const arr = st.waits.filter(w => w.date && w.date <= t);
-  const icon = x => x.status === 'blocked' ? '🟣' : ({ red: '🔴', orange: '🟠', yellow: '🟡', white: '⚪' }[x.prio] || '•');
-  const lines = [];
-  if (late.length) lines.push(`⚠ En retard : ${late.map(x => icon(x) + ' ' + x.title).join(', ')}`);
-  if (tod.length) lines.push(`📌 Aujourd'hui : ${tod.map(x => icon(x) + ' ' + x.title).join(', ')}`);
-  if (arr.length) lines.push(`📦 Attendu : ${arr.map(w => w.title).join(', ')}`);
-  const parts = [];
-  if (tod.length) parts.push(`${tod.length} aujourd'hui`);
-  if (late.length) parts.push(`${late.length} en retard`);
-  if (arr.length) parts.push(`${arr.length} colis`);
-  return { count: late.length + tod.length + arr.length, title: parts.length ? 'Planning · ' + parts.join(' · ') : 'Planning', body: lines.join('\n') };
-}
 async function swReg() { try { return 'serviceWorker' in navigator ? (await navigator.serviceWorker.getRegistration()) || null : null; } catch (e) { return null; } }
 async function firstToday() {
   const d = today();
@@ -740,7 +897,7 @@ let notifTimer;
 function queueNotify() { clearTimeout(notifTimer); notifTimer = setTimeout(() => notify(false), 800); }
 async function notify(force) {
   if (!('Notification' in window) || Notification.permission !== 'granted') { if (force) toast("Active d'abord les notifications"); return; }
-  const s = buildSummary(S), reg = await swReg();
+  const s = PlanningLogic.summary(JSON.parse(JSON.stringify({ tasks: S.tasks, waits: S.waits })), today()), reg = await swReg();
   if (!s.count && !force) { if (reg) (await reg.getNotifications({ tag: NOTIF_TAG })).forEach(n => n.close()); return; }
   const loud = force || await firstToday();
   const opts = { body: s.count ? s.body : "Rien à faire aujourd'hui 🎉", tag: NOTIF_TAG, renotify: loud, silent: !loud, requireInteraction: true,
@@ -778,15 +935,12 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   try { navigator.serviceWorker.register('sw.js').then(() => registerPeriodic()).catch(() => {}); } catch (e) {}
 }
 let lastDay = today();
-function tick() {
-  if (today() !== lastDay) { lastDay = today(); render(); notify(false); }
-}
+function tick() { if (today() !== lastDay) { lastDay = today(); render(); notify(false); } }
 setInterval(tick, 60e3);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); notify(false); } });
 render(false);
 if (S.settings.view === 'planning') scrollToToday();
-persistForSW();
-notify(false);
+save();
 </script>
 </body>
 </html>
