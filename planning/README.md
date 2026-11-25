@@ -17,6 +17,11 @@ App de planning très simple (PWA : s'installe sur l'écran d'accueil, marche ho
 - **Notifications** (Réglages → Activer) : résumé des tâches du jour, en retard, des colis attendus et des besoins non remplis.
 - **Sauvegarde** : données stockées sur le téléphone, export/import d'un fichier JSON dans Réglages.
 
+## Synchronisation téléphone ↔ ordinateur
+Réglages → Synchronisation : coller un jeton GitHub (permission « gist » uniquement, créé sur https://github.com/settings/tokens/new?scopes=gist&description=Planning). L'app crée un Gist **privé** « planning-sync.json » et s'y synchronise : à l'ouverture, au retour sur l'app, toutes les 45 s et quelques secondes après chaque modification. La fusion se fait tâche par tâche (la modification la plus récente gagne, les suppressions sont conservées), donc on peut modifier sur les deux appareils. Le fond d'écran n'est pas synchronisé.
+
+Utiliser la même adresse sur tous les appareils, idéalement GitHub Pages (pas raw.githack.com, qui est partagé avec d'autres sites).
+
 ## Installation
 L'app doit être servie en HTTPS, par exemple avec GitHub Pages
 (Settings → Pages → Branch, dossier `/ (root)`), puis ouvrir `https://<utilisateur>.github.io/<dépôt>/planning/`.

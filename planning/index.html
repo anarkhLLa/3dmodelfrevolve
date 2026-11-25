@@ -252,6 +252,10 @@ input[type=color]{width:52px;height:36px;padding:2px;border-radius:9px;cursor:po
 .pal-it button{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:0;background:var(--text);color:var(--bg);font-size:11px;line-height:1;cursor:pointer}
 .card .lbl:first-of-type{margin-top:6px}
 
+#syncDot{font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;margin-right:auto;white-space:nowrap}
+#syncDot.sync-ok{color:var(--done)} #syncDot.sync-err{color:var(--red)}
+.bar h1{flex:none}
+#headerTools{margin-left:auto}
 #toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;
   background:var(--text);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600;
   display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px #0005}
@@ -308,7 +312,7 @@ input[type=color]{width:52px;height:36px;padding:2px;border-radius:9px;cursor:po
 </head>
 <body>
 <header>
-  <div class="bar"><h1 id="viewTitle">Planning</h1><div id="headerTools" style="display:flex;gap:6px"></div></div>
+  <div class="bar"><h1 id="viewTitle">Planning</h1><span id="syncDot" data-act="sync-now"></span><div id="headerTools" style="display:flex;gap:6px"></div></div>
   <div id="waits" class="waits"></div>
 </header>
 <main id="main"></main>
@@ -399,13 +403,13 @@ const MAX_DAYS = 14;
              slots: [{ d: 'AAAA-MM-JJ' | null, ok: bool, o: ordre }],   // un slot = une journée de travail
              needs: [{ id, text, ok }] }                                  // besoins (achats, matériel…) */
 function defaults() {
-  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), colors: JSON.parse(JSON.stringify(DEFAULT_COLORS)), look: { ...DEFAULT_LOOK }, settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), colors: JSON.parse(JSON.stringify(DEFAULT_COLORS)), look: { ...DEFAULT_LOOK }, tomb: {}, metaU: {}, settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
 }
 function load() {
   const d = defaults();
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); mergeLook(d, x.look);
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; d.tomb = x.tomb || {}; d.metaU = x.metaU || {}; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); mergeLook(d, x.look);
       // ancienne palette par défaut -> nouvelle palette harmonisée (une seule fois)
       if (JSON.stringify(d.colors.palette) === JSON.stringify(TASK_COLORS_OLD)) {
         d.colors.palette = TASK_COLORS_DEFAULT.slice();
@@ -492,7 +496,8 @@ function fixCats(d) {
 }
 let S = load();
 let ui = { q: '', cur: null, slot: null, wait: null, need: null, needCat: null };
-function save() {
+function save(fromSync) {
+  if (!fromSync && typeof stamp === 'function' && stamp()) queueSync();
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
   persistForSW(); queueNotify();
 }
@@ -699,7 +704,7 @@ function renderSettings() {
   $('#headerTools').innerHTML = '';
   const perm = 'Notification' in window ? Notification.permission : 'unsupported';
   const permTxt = { granted: '✅ Activées', denied: '⛔ Bloquées dans les réglages du navigateur', default: 'Pas encore activées', unsupported: '⚠ Non disponibles ici' }[perm];
-  $('#main').innerHTML = `
+  $('#main').innerHTML = syncCardHTML() + `
   <div class="card"><h3>🔔 Notifications</h3>
     <p>Une notification résume en permanence les tâches du jour, celles en retard, les colis attendus et les besoins à obtenir. Elle se met à jour à chaque ouverture de l'app et à chaque changement.<br><b>${permTxt}</b></p>
     <button class="btn primary" data-act="notif-on">Activer</button><button class="btn" data-act="notif-test">Tester</button>
@@ -982,6 +987,8 @@ function act(a, el, e) {
     case 'fd': $('#taskForm [name=date]').value = el.dataset.v; return;
     case 'theme': S.settings.theme = el.dataset.v; save(); render(); return;
     case 'wall-del': removeWall(); return;
+    case 'sync-now': syncNow(); return;
+    case 'sync-off': syncDisconnect(); return;
     case 'look-reset': S.look = { ...DEFAULT_LOOK }; commit('Opacités par défaut'); return;
     case 'pal-add': { const h = Math.floor(Math.random() * 360); const c = hslHex(h, 65, 42); S.colors.palette.push(c); commit('Couleur ajoutée'); return; }
     case 'pal-del': { const u = snapshot(); S.colors.palette.splice(+el.dataset.i, 1); commit('Couleur retirée', u); return; }
@@ -1046,6 +1053,8 @@ document.addEventListener('submit', e => {
       setDays(nt, days); S.tasks.push(nt); closeSheet();
       commit(days > 1 ? `Tâche ajoutée · ${unplaced(nt)} jour(s) à placer` : 'Tâche ajoutée');
     }
+  } else if (f.id === 'syncForm') {
+    syncConnect(fd.get('token'));
   } else if (f.id === 'blockForm') {
     const t = ui.cur && find(ui.cur); if (!t) return;
     const reason = (fd.get('reason') || '').trim(); if (!reason) return;
@@ -1294,6 +1303,155 @@ function persistForSW() {
   }, 400);
 }
 
+/* ---------- synchronisation entre appareils (Gist privé GitHub) ----------
+   Chaque tâche / attente porte « u » (date de dernière modif). Les suppressions laissent une trace dans S.tomb.
+   À chaque synchro : on lit le Gist, on fusionne élément par élément (le plus récent gagne), on réécrit si besoin.
+   Le jeton et l'identifiant du Gist restent sur l'appareil (jamais exportés). */
+const SYNC_KEY = 'planning.sync', SYNC_FILE = 'planning-sync.json';
+let SY = {};
+try { SY = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}') || {}; } catch (e) { SY = {}; }
+const saveSY = () => { try { localStorage.setItem(SYNC_KEY, JSON.stringify(SY)); } catch (e) {} };
+let syncBase = null, syncing = false, syncAgain = false, syncTimer = null, syncStatus = SY.token ? 'idle' : 'off', syncErr = '';
+const strip = x => { const { u, ...r } = x; return JSON.stringify(r); };
+function syncSnapshot() {
+  syncBase = { t: new Map(S.tasks.map(x => [x.id, strip(x)])), w: new Map(S.waits.map(x => [x.id, strip(x)])),
+    m: { cats: JSON.stringify(S.cats), colors: JSON.stringify(S.colors), look: JSON.stringify(S.look) } };
+}
+// repère ce qui a changé depuis la dernière fois et le date
+function stamp() {
+  if (!syncBase) { syncSnapshot(); return false; }
+  const now = Date.now(); let changed = false;
+  for (const [list, key] of [[S.tasks, 't'], [S.waits, 'w']]) {
+    const seen = new Set();
+    for (const x of list) { seen.add(x.id); if (syncBase[key].get(x.id) !== strip(x)) { x.u = now; changed = true; } }
+    for (const id of syncBase[key].keys()) if (!seen.has(id)) { S.tomb[id] = now; changed = true; }
+  }
+  for (const k of ['cats', 'colors', 'look']) if (JSON.stringify(S[k]) !== syncBase.m[k]) { S.metaU[k] = now; changed = true; }
+  syncSnapshot();
+  return changed;
+}
+function syncDoc() { return { v: 1, tasks: S.tasks, waits: S.waits, tomb: S.tomb, cats: S.cats, colors: S.colors, look: S.look, metaU: S.metaU }; }
+function canon(d) {
+  const byId = (a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  const tomb = {}; Object.keys(d.tomb || {}).sort().forEach(k => tomb[k] = d.tomb[k]);
+  return JSON.stringify({ tasks: (d.tasks || []).slice().sort(byId), waits: (d.waits || []).slice().sort(byId), tomb, cats: d.cats, colors: d.colors, look: d.look, metaU: d.metaU || {} });
+}
+function mergeDocs(a, b) {
+  if (!b) return a;
+  const tomb = { ...(b.tomb || {}) };
+  for (const [k, v] of Object.entries(a.tomb || {})) tomb[k] = Math.max(tomb[k] || 0, v);
+  const old = Date.now() - 90 * 864e5;
+  for (const k of Object.keys(tomb)) if (tomb[k] < old) delete tomb[k];
+  const list = (la, lb) => {
+    const m = new Map();
+    for (const x of lb || []) m.set(x.id, x);
+    for (const x of la || []) { const y = m.get(x.id); if (!y || (x.u || 0) >= (y.u || 0)) m.set(x.id, x); }
+    return [...m.values()].filter(x => !(tomb[x.id] && tomb[x.id] >= (x.u || 0)));
+  };
+  const out = { v: 1, tasks: list(a.tasks, b.tasks), waits: list(a.waits, b.waits), tomb, metaU: { ...(a.metaU || {}) } };
+  for (const k of ['cats', 'colors', 'look']) {
+    const ra = (a.metaU || {})[k] || 0, rb = (b.metaU || {})[k] || 0;
+    if (b[k] && rb > ra) { out[k] = b[k]; out.metaU[k] = rb; } else out[k] = a[k];
+  }
+  return out;
+}
+async function gh(path, opts = {}) {
+  const r = await fetch('https://api.github.com' + path, { ...opts, cache: 'no-store',
+    headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + SY.token, 'X-GitHub-Api-Version': '2022-11-28', ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+  if (!r.ok) throw new Error(r.status === 401 ? 'Jeton refusé (expiré ou mal copié)' : r.status === 404 ? 'Gist introuvable (le jeton a-t-il la permission « gist » ?)' : r.status === 403 ? 'Accès refusé par GitHub (limite ou permission)' : 'Erreur GitHub ' + r.status);
+  return r.status === 204 ? null : r.json();
+}
+async function findOrCreateGist() {
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`);
+    const g = list.find(x => x.files && x.files[SYNC_FILE]);
+    if (g) return g.id;
+    if (list.length < 100) break;
+  }
+  const g = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Planning — synchronisation (privé)', public: false, files: { [SYNC_FILE]: { content: JSON.stringify({ ...syncDoc(), at: Date.now() }) } } }) });
+  return g.id;
+}
+async function readRemote() {
+  const g = await gh('/gists/' + SY.gistId), f = g.files && g.files[SYNC_FILE];
+  if (!f) return null;
+  let c = f.content;
+  if (f.truncated) c = await (await fetch(f.raw_url, { cache: 'no-store' })).text();
+  try { return JSON.parse(c); } catch (e) { return null; }
+}
+function setSync(st, err) { syncStatus = st; syncErr = err || ''; paintSync(); }
+function paintSync() {
+  const el = $('#syncDot'); if (!el) return;
+  const map = { off: ['', ''], idle: ['☁︎', 'Synchronisé'], busy: ['☁︎…', 'Synchronisation…'], ok: ['☁︎✓', 'Synchronisé'], err: ['☁︎!', 'Erreur de synchronisation'] };
+  const [txt, title] = map[syncStatus] || map.off;
+  el.textContent = txt; el.title = title; el.className = 'sync-' + syncStatus;
+  const box = $('#syncInfo'); if (box) box.innerHTML = syncInfoHTML();
+}
+function syncInfoHTML() {
+  if (syncStatus === 'busy') return '⏳ Synchronisation…';
+  if (syncStatus === 'err') return `⚠ ${esc(syncErr)}`;
+  if (SY.last) { const d = new Date(SY.last); return `✅ Synchronisé à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+  return 'Connecté';
+}
+function queueSync(delay = 2500) { if (!SY.token) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, delay); }
+async function syncNow() {
+  if (!SY.token || !SY.gistId) return;
+  if (syncing) { syncAgain = true; return; }
+  if (drag || pending) { queueSync(1500); return; }
+  syncing = true; setSync('busy');
+  try {
+    const remote = await readRemote();
+    stamp();
+    const merged = mergeDocs(syncDoc(), remote), mc = canon(merged);
+    if (!remote || canon(remote) !== mc) await gh('/gists/' + SY.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [SYNC_FILE]: { content: JSON.stringify({ ...merged, at: Date.now() }) } } }) });
+    stamp();
+    const fin = mergeDocs(syncDoc(), merged);          // modifs faites pendant la requête : elles gagnent
+    if (canon(fin) !== mc) syncAgain = true;
+    if (canon(syncDoc()) !== canon(fin)) {
+      if (drag || pending) syncAgain = true;
+      else {
+        S.tasks = fin.tasks; S.waits = fin.waits; S.tomb = fin.tomb; S.metaU = fin.metaU;
+        S.cats = fin.cats; S.colors = fin.colors; S.look = fin.look;
+        PlanningLogic.migrate(S); fixCats(S); syncSnapshot(); save(true); render();
+      }
+    }
+    SY.last = Date.now(); saveSY(); setSync('ok');
+  } catch (e) { setSync('err', e.message || 'Réseau indisponible'); }
+  finally { syncing = false; if (syncAgain) { syncAgain = false; queueSync(800); } }
+}
+async function syncConnect(token) {
+  token = (token || '').trim();
+  if (!token) { toast('Colle d’abord ton jeton GitHub'); return; }
+  SY = { token }; setSync('busy');
+  try {
+    SY.gistId = await findOrCreateGist(); saveSY();
+    await syncNow();
+    if (syncStatus === 'ok') toast('Synchronisation activée ✓');
+    render();
+  } catch (e) { SY = {}; saveSY(); setSync('off'); toast(e.message || 'Connexion impossible'); render(); }
+}
+function syncDisconnect() {
+  if (!confirm('Déconnecter cet appareil ? Tes données restent ici et dans le Gist ; seule la synchro s’arrête sur cet appareil.')) return;
+  SY = {}; saveSY(); setSync('off'); render(); toast('Synchronisation désactivée sur cet appareil');
+}
+function syncCardHTML() {
+  const shared = /(^|\.)githack\.com$/i.test(location.hostname);
+  const warn = shared ? `<p style="color:var(--red);font-weight:700">⚠ Tu utilises l'app via raw.githack.com, un site partagé avec d'autres. Pour la synchro, utilise plutôt ta propre adresse GitHub Pages (voir l'aide), car le jeton est enregistré dans le navigateur.</p>` : '';
+  if (SY.token) return `<div class="card"><h3>☁️ Synchronisation téléphone ↔ ordinateur</h3>${warn}
+    <p id="syncInfo">${syncInfoHTML()}</p>
+    <p>Tes tâches, attentes, besoins, catégories, couleurs et réglages d'affichage sont partagés entre tous les appareils connectés avec le même jeton. Le fond d'écran reste propre à chaque appareil.</p>
+    <button class="btn primary" data-act="sync-now">Synchroniser maintenant</button><button class="btn danger" data-act="sync-off">Déconnecter cet appareil</button></div>`;
+  return `<div class="card"><h3>☁️ Synchronisation téléphone ↔ ordinateur</h3>${warn}
+    <p>Pour retrouver ton planning partout, l'app enregistre une copie dans un <b>Gist privé</b> de ton compte GitHub. À faire une fois par appareil :</p>
+    <ol style="margin:0 0 10px;padding-left:20px;font-size:13.5px;color:var(--muted)">
+      <li>Ouvre <a href="https://github.com/settings/tokens/new?scopes=gist&description=Planning" target="_blank" rel="noopener">ce lien GitHub</a> (connecté à ton compte).</li>
+      <li>Choisis une expiration (« No expiration » pour ne plus y penser), laisse seulement la case <b>gist</b> cochée, puis <b>Generate token</b>.</li>
+      <li>Copie le jeton (il commence par <code>ghp_</code>) et colle-le ci-dessous. Garde-le aussi quelque part pour ton autre appareil.</li>
+    </ol>
+    <form id="syncForm" class="need-add"><input name="token" type="password" autocomplete="off" placeholder="ghp_…" required><button class="btn primary">Connecter</button></form></div>`;
+}
+window.addEventListener('online', () => queueSync(500));
+setInterval(() => { if (!document.hidden) queueSync(0); }, 45e3);
+
 /* ---------- démarrage ---------- */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   try { navigator.serviceWorker.register('sw.js').then(() => registerPeriodic()).catch(() => {}); } catch (e) {}
@@ -1301,10 +1459,12 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 let lastDay = today();
 function tick() { if (today() !== lastDay) { lastDay = today(); render(); notify(false); } }
 setInterval(tick, 60e3);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); notify(false); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); notify(false); queueSync(0); } });
 render(false);
 if (S.settings.view === 'planning') scrollToToday();
 save();
+paintSync();
+if (SY.token) queueSync(300);
 </script>
 </body>
 </html>
