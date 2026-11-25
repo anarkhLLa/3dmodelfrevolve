@@ -97,6 +97,11 @@ nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);
 .p-orange{background:var(--orange);color:#fff}
 .p-yellow{background:var(--yellow);color:#1b1b1b}
 .p-white{background:#fff;color:#1b1b1b;border-color:#c9c9d2}
+.rc{background:var(--tc);color:#fff}
+.psq{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1.5px #ffffffcc,0 0 0 2.5px #0000004d}
+.psq[data-p=red]{background:var(--red)} .psq[data-p=orange]{background:var(--orange)}
+.psq[data-p=yellow]{background:var(--yellow)} .psq[data-p=white]{background:#fff}
+.swatch{display:inline-block;width:26px;height:26px;border-radius:8px;vertical-align:middle;margin-right:8px}
 .c-done{background:var(--green);color:#fff}
 .c-done .t-title::before{content:"✓ "}
 .c-blocked{background:var(--violet);color:#fff}
@@ -116,7 +121,7 @@ nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);
 .tray-h{display:flex;justify-content:space-between;cursor:pointer;font-size:13px}
 .tray .tasks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .tray .task{margin:0;max-width:100%}
-.tray.over,.day.over{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.tray.over,.half.over{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)}
 .empty{font-size:12px;color:var(--muted)}
 .board{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 4px;scrollbar-width:thin}
 body.dragging .board{scroll-snap-type:none}
@@ -125,15 +130,18 @@ body.dragging .board{scroll-snap-type:none}
 .week-h b{font-size:14px}
 .week-h small{font-size:11.5px}
 .week.cur .week-h b{color:var(--accent)}
-.day{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;padding:6px 6px 1px;min-height:62px}
-.day.we{background:color-mix(in srgb,var(--surface) 85%,var(--surface2))}
-.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.day{--dc:#9ca3af;--dt:#1b1b1b;background:color-mix(in srgb,var(--dc) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--dc) 55%,var(--line));
+  border-radius:12px;margin-bottom:8px;overflow:hidden}
+.day.today{outline:3px solid var(--accent);outline-offset:1px}
 .day.past{opacity:.72}
-.day-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
-.day.today .day-h{color:var(--accent)}
-.day-h .add{border:0;background:var(--surface2);border-radius:7px;width:26px;height:22px;line-height:1;font-size:16px;cursor:pointer;color:var(--muted)}
-.day .tasks{min-height:18px}
-.day-wait{font-size:11.5px;font-weight:700;color:var(--orange);padding:2px 2px 6px;cursor:pointer}
+.day-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:800;background:var(--dc);color:var(--dt);padding:4px 8px}
+.day.d6 .day-h{border-bottom:1px solid var(--line)}
+.half{padding:3px 6px 1px;min-height:38px}
+.half + .half{border-top:1px dashed color-mix(in srgb,var(--dc) 60%,var(--line))}
+.half-l{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.half-l .add{border:0;background:var(--surface);border-radius:6px;width:24px;height:19px;line-height:1;font-size:15px;cursor:pointer;color:var(--muted);box-shadow:0 0 0 1px var(--line)}
+.day .tasks{min-height:14px}
+.day-wait{font-size:11.5px;font-weight:700;color:var(--orange);padding:2px 8px 6px;cursor:pointer}
 .drop-line{height:3px;border-radius:2px;background:var(--accent);margin:0 0 5px}
 .tray .drop-line{display:none}
 .ghost{position:fixed;z-index:100;pointer-events:none;margin:0;transform:rotate(2deg) scale(1.05);box-shadow:0 10px 26px #0006;opacity:.95}
@@ -284,6 +292,18 @@ const DEFAULT_CATS = {
 };
 const CAT_KINDS = [['task', 'Tâches'], ['wait', 'Attentes'], ['need', 'Besoins']];
 const NOCAT = 'Sans catégorie';
+// couleurs aléatoires des tâches (évite le vert = terminé et le violet = bloqué)
+const TASK_COLORS = ['#0284c7', '#0d9488', '#db2777', '#92400e', '#475569', '#0891b2', '#d97706', '#e11d48', '#1e3a8a', '#c2410c', '#be185d', '#0f766e', '#78716c', '#2563eb', '#a16207', '#9f1239'];
+// couleur fixe de chaque jour : [fond, texte]
+const DAY_COLORS = [['#9ca3af', '#1b1b1b'], ['#facc15', '#1b1b1b'], ['#f97316', '#fff'], ['#3b82f6', '#fff'], ['#22c55e', '#fff'], ['#ef4444', '#fff'], ['#ffffff', '#1b1b1b']];
+const HALVES = [['am', 'Matin'], ['pm', 'Après-midi']];
+const halfShort = p => p === 'pm' ? 'aprèm' : 'matin';
+function pickColor(tasks, avoid) {
+  const use = c => tasks.filter(t => t.color === c && (t.status === 'todo' || t.status === 'blocked')).length;
+  const pool = TASK_COLORS.filter(c => c !== avoid), min = Math.min(...pool.map(use));
+  const best = pool.filter(c => use(c) === min);
+  return best[Math.floor(Math.random() * best.length)];
+}
 const catLabel = c => c || NOCAT;
 // liste déroulante de catégories (kind : task | wait | need)
 const catSelect = (kind, name, val) => `<select name="${name}" aria-label="Catégorie">${S.cats[kind].map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(c)}</option>`).join('')}<option value=""${val && S.cats[kind].includes(val) ? '' : ' selected'}>${NOCAT}</option></select>`;
@@ -309,6 +329,7 @@ function load() {
 }
 // toute catégorie utilisée mais absente des listes y est rajoutée
 function fixCats(d) {
+  for (const t of d.tasks) { if (!t.color) t.color = pickColor(d.tasks); for (const x of t.slots) if (x.p !== 'pm') x.p = 'am'; }
   const add = (k, c) => { if (c && !d.cats[k].includes(c)) d.cats[k].push(c); };
   for (const t of d.tasks) { add('task', t.cat); for (const n of t.needs) add('need', n.cat); }
   for (const w of d.waits) add('wait', w.cat);
@@ -328,22 +349,23 @@ const byPrio = (a, b) => PRIO_RANK[a.prio] - PRIO_RANK[b.prio] || firstDate(a).l
 const waitFor = t => t.block && t.block.waitId ? S.waits.find(w => w.id === t.block.waitId) : null;
 const unmet = t => t.needs.filter(n => !n.ok);
 const unplaced = t => t.slots.filter(s => !s.d).length;
-function slotsOn(day) {
+function slotsOn(day, p) {
   const r = [];
-  for (const t of S.tasks) t.slots.forEach((s, i) => { if (s.d === day) r.push({ t, i, s }); });
+  for (const t of S.tasks) t.slots.forEach((s, i) => { if (s.d === day && (!p || s.p === p)) r.push({ t, i, s }); });
   const off = x => (!isActive(x.t) || x.s.ok) ? 1 : 0;
   return r.sort((a, b) => off(a) - off(b) || (a.s.o ?? 0) - (b.s.o ?? 0) || byPrio(a.t, b.t));
 }
-function nextOrder(day) { return Math.max(0, ...slotsOn(day).map(x => (x.s.o ?? 0) + 1)); }
+function nextOrder(day, p) { return Math.max(0, ...slotsOn(day, p).map(x => (x.s.o ?? 0) + 1)); }
+const slotKey = x => (x.d || '9') + (x.p === 'pm' ? '2' : '1');
 function slotRank(t, i) {
-  const order = t.slots.map((_, j) => j).sort((a, b) => (t.slots[a].d || '9').localeCompare(t.slots[b].d || '9') || a - b);
+  const order = t.slots.map((_, j) => j).sort((a, b) => slotKey(t.slots[a]).localeCompare(slotKey(t.slots[b])) || a - b);
   return order.indexOf(i) + 1;
 }
 function whenText(t) {
-  const n = t.slots.length, ds = t.slots.filter(s => s.d).map(s => s.d).sort(), u = n - ds.length;
+  const n = t.slots.length, ps = t.slots.filter(s => s.d).sort((a, b) => slotKey(a).localeCompare(slotKey(b))), ds = ps.map(s => fmtRel(s.d) + ' ' + halfShort(s.p)), u = n - ds.length;
   const parts = [];
   if (n > 1) parts.push(`${n} jours`);
-  if (ds.length) parts.push(ds.slice(0, 3).map(fmtRel).join(', ') + (ds.length > 3 ? '…' : ''));
+  if (ds.length) parts.push(ds.slice(0, 3).join(', ') + (ds.length > 3 ? '…' : ''));
   if (u) parts.push(n > 1 ? `${u} à placer` : 'non planifiée');
   return (isLate(t) ? '⚠ en retard · ' : '') + parts.join(' · ');
 }
@@ -367,7 +389,7 @@ function render(keepScroll = true) {
 function chip(t, o = {}) {
   const s = o.slot != null ? t.slots[o.slot] : null, n = t.slots.length;
   const done = t.status === 'done' || (s && s.ok && !o.tray);
-  const cls = done ? 'c-done' : t.status === 'blocked' ? 'c-blocked' : t.status === 'cancelled' ? 'c-cancel' : 'p-' + t.prio;
+  const cls = done ? 'c-done' : t.status === 'blocked' ? 'c-blocked' : t.status === 'cancelled' ? 'c-cancel' : 'rc';
   const late = o.full ? isLate(t) : (s && !o.tray && isActive(t) && slotLate(s));
   let tag = '';
   if (n > 1 && s && !o.tray && s.d) tag += `<span class="badge">j${slotRank(t, o.slot)}/${n}</span>`;
@@ -382,10 +404,9 @@ function chip(t, o = {}) {
   if (late && !o.full) sub += `<span class="t-sub">⚠ en retard (${fmtRel(s.d)})</span>`;
   let meta = '';
   if (o.full) {
-    const dot = t.status !== 'todo' ? `<i class="pdot" data-p="${t.prio}"></i>` : '';
-    meta = `<span class="meta">${dot}${esc(catLabel(t.cat))} · ${whenText(t)}</span>`;
+    meta = `<span class="meta">${esc(catLabel(t.cat))} · ${whenText(t)}</span>`;
   }
-  return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}"><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
+  return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}" style="--tc:${t.color || '#475569'}"><i class="psq" data-p="${t.prio}" title="Importance"></i><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
 }
 
 function renderPlanning() {
@@ -410,9 +431,10 @@ function renderPlanning() {
     for (let d = 0; d < 7; d++) {
       const day = addDays(ws, d);
       const waits = S.waits.filter(x => x.date === day);
-      h += `<div class="day${day === t ? ' today' : ''}${day < t ? ' past' : ''}${d >= 5 ? ' we' : ''}" data-drop="${day}">
-        <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span><button class="add" data-act="add-day" data-day="${day}" aria-label="Ajouter une tâche">+</button></div>
-        <div class="tasks">${slotsOn(day).map(x => chip(x.t, { slot: x.i })).join('')}</div>
+      h += `<div class="day d${d}${day === t ? ' today' : ''}${day < t ? ' past' : ''}" style="--dc:${DAY_COLORS[d][0]};--dt:${DAY_COLORS[d][1]}">
+        <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span></div>
+        ${HALVES.map(([p, l]) => `<div class="half" data-drop="${day}" data-p="${p}"><div class="half-l"><span>${l}</span><button class="add" data-act="add-day" data-day="${day}" data-p="${p}" aria-label="Ajouter une tâche ${l.toLowerCase()}">+</button></div>
+          <div class="tasks">${slotsOn(day, p).map(x => chip(x.t, { slot: x.i })).join('')}</div></div>`).join('')}
         ${waits.map(x => `<div class="day-wait" data-act="waits-open">📦 ${esc(x.title)}</div>`).join('')}
       </div>`;
     }
@@ -523,6 +545,7 @@ function renderSettings() {
     <button class="btn primary" data-act="notif-on">Activer</button><button class="btn" data-act="notif-test">Tester</button>
     <p style="margin-top:6px">Sur iPhone : ouvrir dans Safari → Partager → « Sur l'écran d'accueil », puis activer depuis l'app installée. Sur Android : menu Chrome → « Installer l'application ».</p></div>
   <div class="card"><h3>🎨 Couleurs</h3><div class="legend">
+    <span class="task rc" style="--tc:#0d9488"><i class="psq" data-p="red"></i>Tâche</span><span>Chaque tâche a sa propre couleur (aléatoire, 🎲 pour en changer). Le petit carré = importance :</span>
     <span class="task p-red">Rouge</span><span>Urgent</span>
     <span class="task p-orange">Orange</span><span>Important</span>
     <span class="task p-yellow">Jaune</span><span>Normal</span>
@@ -568,7 +591,7 @@ function openTask(id, slot, keep) {
   const multi = n > 1;
   openSheet(`
     <div class="sh-head">${chip(t, { slot: i })}<div class="muted" style="margin-top:6px;font-size:13px">${esc(catLabel(t.cat))} · ${whenText(t)}</div>
-    ${multi ? `<div class="hint">Jour sélectionné : <b>${s.d ? `j${slotRank(t, i)}/${n} · ${fmtRel(s.d)}` : 'pas encore placé'}</b></div>` : ''}
+    ${multi ? `<div class="hint">Jour sélectionné : <b>${s.d ? `j${slotRank(t, i)}/${n} · ${fmtRel(s.d)} ${halfShort(s.p)}` : 'pas encore placé'}</b></div>` : ''}
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}</div>
     <h4>État</h4>
     ${multi && s.d && isActive(t) ? `<div style="margin-bottom:8px">${s.ok ? B('slot-ok', '↺ Journée à refaire', 'full') : B('slot-ok', '✓ Journée faite', 'okl full')}</div>` : ''}
@@ -579,6 +602,7 @@ function openTask(id, slot, keep) {
     <h4>${multi ? 'Reporter ce jour' : 'Reporter'}</h4>
     <div class="grid3">${B('to-today', "Aujourd'hui")}${B('plus1', '+1 jour')}${B('plus7', '+1 semaine')}</div>
     <div class="row"><label class="date-l">📅<input type="date" id="pickDate" value="${s.d || ''}"></label>${s.d ? B('unplan', 'Retirer du planning') : ''}</div>
+    ${s.d ? `<div class="seg" style="margin-top:8px">${HALVES.map(([p, l]) => `<button style="flex:1;padding:10px" data-act="half" data-v="${p}" class="${s.p === p ? 'on' : ''}">${l}</button>`).join('')}</div>` : ''}
     <h4>Durée</h4>
     <label class="spread">Étaler sur
       <select id="daysSel">${Array.from({ length: MAX_DAYS }, (_, k) => `<option value="${k + 1}"${k + 1 === n ? ' selected' : ''}>${k + 1} jour${k ? 's' : ''}</option>`).join('')}</select></label>
@@ -592,12 +616,14 @@ function openTask(id, slot, keep) {
       : B('block', '⏳ Bloquer — en attente de…', 'violet full')}
     <h4>Importance</h4>
     <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><button class="p-${k}${t.prio === k ? ' on' : ''}" data-act="prio" data-v="${k}" aria-label="${l}"></button>${l}</label>`).join('')}</div>
+    <h4>Couleur de la tâche</h4>
+    <div style="display:flex;align-items:center"><span class="swatch" style="background:${t.color}"></span>${B('recolor', '🎲 Autre couleur', 'sm')}</div>
     <div class="grid2" style="margin-top:16px">${B('edit', '✎ Modifier')}${B('del', '🗑 Supprimer', 'danger')}</div>`, keep);
 }
 
 function daysOptions(n) { return Array.from({ length: MAX_DAYS }, (_, k) => `<option value="${k + 1}"${k + 1 === n ? ' selected' : ''}>${k + 1} jour${k ? 's' : ''}</option>`).join(''); }
 function openForm(t, preset = {}) {
-  const v = t || { title: '', cat: preset.cat || S.cats.task[0] || '', prio: 'yellow', note: '', slots: [{ d: preset.date || null }] };
+  const v = t || { title: '', cat: preset.cat || S.cats.task[0] || '', prio: 'yellow', note: '', slots: [{ d: preset.date || null, p: preset.p || 'am' }] };
   const n = v.slots.length;
   ui.cur = t ? t.id : null;
   openSheet(`<h3>${t ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
@@ -609,6 +635,7 @@ function openForm(t, preset = {}) {
       <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><input type="radio" name="prio" value="${k}"${k === v.prio ? ' checked' : ''}><span class="circle p-${k}"></span>${l}</label>`).join('')}</div>
       ${n === 1 ? `<div class="lbl">${t ? 'Jour' : 'Premier jour'}</div>
       <input type="date" name="date" value="${v.slots[0].d || ''}">
+      <div class="cat-pick" style="margin-top:8px">${HALVES.map(([p, l]) => `<label><input type="radio" name="p" value="${p}"${(v.slots[0].p || 'am') === p ? ' checked' : ''}><span>${l}</span></label>`).join('')}</div>
       <div class="grid3" style="margin-top:8px">${B('fd', 'Aucun', '', 'type="button" data-v=""')}${B('fd', "Aujourd'hui", '', `type="button" data-v="${today()}"`)}${B('fd', 'Demain', '', `type="button" data-v="${addDays(today(), 1)}"`)}</div>` : ''}
       <div class="lbl">Durée</div>
       <label class="spread">Étaler sur <select name="days">${daysOptions(n)}</select></label>
@@ -683,16 +710,17 @@ function setStatus(t, s) {
   if (s !== 'blocked') t.block = null;
 }
 // déplace le jour i de la tâche ; refuse si la tâche est déjà prévue ce jour-là
-function moveSlot(t, i, date) {
-  if (date && t.slots.some((x, j) => j !== i && x.d === date)) { toast(`Déjà prévue ${fmtRel(date)}`); return false; }
-  const s = t.slots[i]; s.d = date; s.o = date ? nextOrder(date) : 0;
+function moveSlot(t, i, date, p) {
+  const s = t.slots[i]; p = p || s.p || 'am';
+  if (date && t.slots.some((x, j) => j !== i && x.d === date && x.p === p)) { toast(`Déjà prévue ${fmtRel(date)} ${halfShort(p)}`); return false; }
+  s.d = date; s.p = p; s.o = date ? nextOrder(date, p) : 0;
   if (t.status === 'cancelled') t.status = 'todo';
   return true;
 }
-function freeDay(t, i, from) { let d = from; while (t.slots.some((x, j) => j !== i && x.d === d)) d = addDays(d, 1); return d; }
+function freeDay(t, i, from, p) { let d = from; while (t.slots.some((x, j) => j !== i && x.d === d && x.p === p)) d = addDays(d, 1); return d; }
 function setDays(t, n) {
   n = Math.max(1, Math.min(MAX_DAYS, n));
-  while (t.slots.length < n) t.slots.push({ d: null, ok: false, o: 0 });
+  while (t.slots.length < n) t.slots.push({ d: null, p: 'am', ok: false, o: 0 });
   while (t.slots.length > n) {
     let j = t.slots.findIndex(s => !s.d);                          // d'abord les jours non placés
     if (j < 0) { j = 0; t.slots.forEach((s, k) => { if ((s.d || '') >= (t.slots[j].d || '')) j = k; }); } // sinon le plus tardif
@@ -709,7 +737,7 @@ function act(a, el, e) {
   switch (a) {
     case 'view': S.settings.view = el.dataset.view; S.settings.waitsOpen = false; save(); closeSheet(); render(false); $('#main').scrollTop = 0; if (el.dataset.view === 'planning') scrollToToday(); return;
     case 'new': openForm(null, { date: S.settings.view === 'planning' ? today() : '', cat: S.settings.view === 'tasks' && S.settings.cat || undefined }); return;
-    case 'add-day': openForm(null, { date: el.dataset.day }); return;
+    case 'add-day': openForm(null, { date: el.dataset.day, p: el.dataset.p }); return;
     case 'close': closeSheet(); return;
     case 'wk-': S.settings.offset--; save(); render(); return;
     case 'wk+': S.settings.offset++; save(); render(); return;
@@ -719,7 +747,7 @@ function act(a, el, e) {
     case 'tray': S.settings.trayOpen = !S.settings.trayOpen; save(); render(); return;
     case 'late-today': {
       const u = snapshot(); let k = 0;
-      for (const x of S.tasks.filter(isActive)) x.slots.forEach((s, i) => { if (slotLate(s)) { k++; moveSlot(x, i, freeDay(x, i, today())); } });
+      for (const x of S.tasks.filter(isActive)) x.slots.forEach((s, i) => { if (slotLate(s)) { k++; moveSlot(x, i, freeDay(x, i, today(), s.p)); } });
       commit(`${k} tâche(s) déplacée(s) à aujourd'hui`, u); return;
     }
     case 'waits': S.settings.waitsOpen = !S.settings.waitsOpen; save(); renderWaits(); return;
@@ -780,11 +808,13 @@ function act(a, el, e) {
     case 'reopen': setStatus(t, 'todo'); closeSheet(); commit('Tâche rouverte', u); break;
     case 'to-today': if (moveSlot(t, i, today())) { closeSheet(); commit("Reportée à aujourd'hui", u); } break;
     case 'plus1': case 'plus7': {
-      const d = freeDay(t, i, addDays(baseDay(s), a === 'plus1' ? 1 : 7));
+      const d = freeDay(t, i, addDays(baseDay(s), a === 'plus1' ? 1 : 7), s.p);
       if (moveSlot(t, i, d)) { closeSheet(); commit(`Reportée à ${fmtRel(d)}`, u); }
       break;
     }
     case 'unplan': moveSlot(t, i, null); closeSheet(); commit('Retirée du planning', u); break;
+    case 'half': if (s.d && moveSlot(t, i, s.d, el.dataset.v)) { commit(el.dataset.v === 'pm' ? 'Passée l’après-midi' : 'Passée le matin', u); refreshSheet(); } break;
+    case 'recolor': t.color = pickColor(S.tasks, t.color); commit(); refreshSheet(); break;
     case 'block': openBlock(t); break;
     case 'unblock': setStatus(t, 'todo'); closeSheet(); commit('Tâche débloquée', u); break;
     case 'prio': t.prio = el.dataset.v; commit(); refreshSheet(); break;
@@ -806,15 +836,15 @@ document.addEventListener('submit', e => {
   if (f.id === 'taskForm') {
     const title = (fd.get('title') || '').trim(); if (!title) return;
     const data = { title, cat: fd.get('cat') || '', prio: fd.get('prio') || 'yellow', note: (fd.get('note') || '').trim() };
-    const date = fd.get('date') || null, days = +fd.get('days') || 1;
+    const date = fd.get('date') || null, days = +fd.get('days') || 1, hp = fd.get('p') === 'pm' ? 'pm' : 'am';
     const t = ui.cur && find(ui.cur);
     if (t) {
       Object.assign(t, data);
-      if (fd.has('date') && t.slots[0].d !== date) moveSlot(t, 0, date);
+      if (fd.has('date') && (t.slots[0].d !== date || t.slots[0].p !== hp)) moveSlot(t, 0, date, hp);
       setDays(t, days); closeSheet(); commit('Enregistrée');
     } else {
       const needs = String(fd.get('needs') || '').split('\n').map(x => x.trim()).filter(Boolean).map(text => ({ id: uid(), text, cat: '', ok: false }));
-      const nt = { id: uid(), ...data, status: 'todo', slots: [{ d: date, ok: false, o: date ? nextOrder(date) : 0 }], needs, created: Date.now(), block: null };
+      const nt = { id: uid(), ...data, status: 'todo', slots: [{ d: date, p: hp, ok: false, o: date ? nextOrder(date, hp) : 0 }], needs, color: pickColor(S.tasks), created: Date.now(), block: null };
       setDays(nt, days); S.tasks.push(nt); closeSheet();
       commit(days > 1 ? `Tâche ajoutée · ${unplaced(nt)} jour(s) à placer` : 'Tâche ajoutée');
     }
@@ -959,11 +989,11 @@ function onEnd(e) {
   if (!d.moved) { openTask(d.id, d.slot); return; }   // appui long sans bouger = ouvrir le menu
   if (!d.zone) return;
   const t = find(d.id); if (!t || !t.slots[d.slot]) return;
-  const target = d.zone.dataset.drop === 'none' ? null : d.zone.dataset.drop;
-  const s = t.slots[d.slot], changedDay = s.d !== target;
-  if (target && t.slots.some((x, j) => j !== d.slot && x.d === target)) { toast(`Déjà prévue ${fmtRel(target)}`); return; }
+  const target = d.zone.dataset.drop === 'none' ? null : d.zone.dataset.drop, hp = d.zone.dataset.p === 'pm' ? 'pm' : 'am';
+  const s = t.slots[d.slot], changedDay = s.d !== target || (target && s.p !== hp);
+  if (target && t.slots.some((x, j) => j !== d.slot && x.d === target && x.p === hp)) { toast(`Déjà prévue ${fmtRel(target)} ${halfShort(hp)}`); return; }
   const u = snapshot();
-  s.d = target;
+  s.d = target; if (target) s.p = hp;
   if (t.status === 'cancelled' && target) t.status = 'todo';
   if (target) {
     const me = t.id + ':' + d.slot;
@@ -974,7 +1004,7 @@ function onEnd(e) {
   } else s.o = 0;
   if (!changedDay) { commit(); return; }
   const left = unplaced(t);
-  commit(target ? `Placée ${fmtRel(target)}${t.slots.length > 1 && left ? ` · encore ${left} jour${left > 1 ? 's' : ''} à placer` : ''}` : 'Retirée du planning', u);
+  commit(target ? `Placée ${fmtRel(target)} ${halfShort(hp)}${t.slots.length > 1 && left ? ` · encore ${left} jour${left > 1 ? 's' : ''} à placer` : ''}` : 'Retirée du planning', u);
 }
 const mainEl = $('#main');
 mainEl.addEventListener('touchstart', onStart, { passive: true });
