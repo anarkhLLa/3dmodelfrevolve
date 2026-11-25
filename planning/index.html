@@ -46,7 +46,7 @@ header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
 .seg-l{font-size:13px;font-weight:600;padding:0 2px;white-space:nowrap}
 
 .waits{margin-top:8px;border-radius:12px;background:var(--surface2);font-size:13px;border:1px solid transparent}
-.waits.alert{background:#f9731618;border-color:var(--orange)}
+.waits.alert{background:color-mix(in srgb,var(--orange) 10%,transparent);border-color:var(--orange)}
 .waits-h{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer}
 .waits-h b{white-space:nowrap}
 .waits-hot{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
@@ -93,30 +93,31 @@ nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);
 .t-sub{display:block;font-size:11.5px;font-weight:500;opacity:.92;margin-top:1px}
 .badge{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;margin-left:3px;background:#0000002a;vertical-align:1px;white-space:nowrap}
 .p-white .badge,.p-yellow .badge{background:#0000001a}
-.p-red{background:var(--red);color:#fff}
-.p-orange{background:var(--orange);color:#fff}
-.p-yellow{background:var(--yellow);color:#1b1b1b}
-.p-white{background:#fff;color:#1b1b1b;border-color:#c9c9d2}
-.rc{background:var(--tc);color:#fff}
+.p-red{background:var(--pr-red);color:var(--pr-red-t)}
+.p-orange{background:var(--pr-orange);color:var(--pr-orange-t)}
+.p-yellow{background:var(--pr-yellow);color:var(--pr-yellow-t)}
+.p-white{background:var(--pr-white);color:var(--pr-white-t)}
+.p-red,.p-orange,.p-yellow,.p-white{border-color:#00000026}
+.rc{background:var(--tc);color:var(--tt,#fff)}
 .psq{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1.5px #ffffffcc,0 0 0 2.5px #0000004d}
-.psq[data-p=red]{background:var(--red)} .psq[data-p=orange]{background:var(--orange)}
-.psq[data-p=yellow]{background:var(--yellow)} .psq[data-p=white]{background:#fff}
+.psq[data-p=red]{background:var(--pr-red)} .psq[data-p=orange]{background:var(--pr-orange)}
+.psq[data-p=yellow]{background:var(--pr-yellow)} .psq[data-p=white]{background:var(--pr-white)}
 .swatch{display:inline-block;width:26px;height:26px;border-radius:8px;vertical-align:middle;margin-right:8px}
-.c-done{background:var(--green);color:#fff}
+.c-done{background:var(--done);color:var(--done-t)}
 .c-done .t-title::before{content:"✓ "}
-.c-blocked{background:var(--violet);color:#fff}
+.c-blocked{background:var(--blocked);color:var(--blocked-t)}
 .c-cancel{background:var(--surface2);color:var(--muted);border-left:5px solid var(--muted)}
 .c-cancel .t-title{text-decoration:line-through}
-.c-cancel[data-p=red]{border-left-color:var(--red)} .c-cancel[data-p=orange]{border-left-color:var(--orange)}
-.c-cancel[data-p=yellow]{border-left-color:var(--yellow)} .c-cancel[data-p=white]{border-left-color:#c9c9d2}
+.c-cancel[data-p=red]{border-left-color:var(--pr-red)} .c-cancel[data-p=orange]{border-left-color:var(--pr-orange)}
+.c-cancel[data-p=yellow]{border-left-color:var(--pr-yellow)} .c-cancel[data-p=white]{border-left-color:#c9c9d2}
 .task.late{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--red)}
 .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:1px;margin-right:5px;border:1px solid #0003}
-.pdot[data-p=red]{background:var(--red)} .pdot[data-p=orange]{background:var(--orange)}
-.pdot[data-p=yellow]{background:var(--yellow)} .pdot[data-p=white]{background:#fff}
+.pdot[data-p=red]{background:var(--pr-red)} .pdot[data-p=orange]{background:var(--pr-orange)}
+.pdot[data-p=yellow]{background:var(--pr-yellow)} .pdot[data-p=white]{background:var(--pr-white)}
 
 /* Planning */
 .banner{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:0 8px 10px;padding:8px 10px;border-radius:12px;
-  background:#ef444418;border:1px solid var(--red);font-size:13px;font-weight:700;color:var(--red)}
+  background:color-mix(in srgb,var(--red) 10%,transparent);border:1px solid var(--red);font-size:13px;font-weight:700;color:var(--red)}
 .tray{margin:0 8px 10px;background:var(--surface);border:1.5px dashed var(--line);border-radius:12px;padding:8px}
 .tray-h{display:flex;justify-content:space-between;cursor:pointer;font-size:13px}
 .tray .tasks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
@@ -165,7 +166,7 @@ body.dragging .board{scroll-snap-type:none}
 .need.ok span{text-decoration:line-through;color:var(--muted);font-weight:500}
 .need .ck{width:28px;height:28px;flex:none;border-radius:8px;border:2px solid var(--line);background:var(--surface);
   font-weight:900;color:#fff;cursor:pointer;line-height:1}
-.need.ok .ck{background:var(--green);border-color:var(--green)}
+.need.ok .ck{background:var(--done);border-color:var(--done)}
 .need .x{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px}
 .need-add{display:flex;gap:6px;margin-top:8px}
 .need-add input{flex:1}
@@ -192,9 +193,9 @@ body.dragging .board{scroll-snap-type:none}
 .btn{appearance:none;border:1px solid var(--line);background:var(--surface2);border-radius:11px;padding:11px 12px;font-weight:650;cursor:pointer;text-align:center}
 .btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
 .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
-.btn.ok{background:var(--green);border-color:transparent;color:#fff}
-.btn.okl{background:#22c55e22;border-color:var(--green)}
-.btn.violet{background:var(--violet);border-color:transparent;color:#fff}
+.btn.ok{background:var(--done);border-color:transparent;color:var(--done-t)}
+.btn.okl{background:color-mix(in srgb,var(--done) 14%,transparent);border-color:var(--done)}
+.btn.violet{background:var(--blocked);border-color:transparent;color:var(--blocked-t)}
 .btn.danger{color:var(--red)}
 .btn.full{width:100%;display:block}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -204,7 +205,7 @@ body.dragging .board{scroll-snap-type:none}
 .spread{display:flex;align-items:center;gap:8px;font-weight:650}
 .spread select{width:auto;flex:none;min-width:84px}
 .hint{font-size:12.5px;color:var(--muted);margin-top:6px}
-.blk{background:#8b5cf61f;border:1px solid var(--violet);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-weight:600}
+.blk{background:color-mix(in srgb,var(--blocked) 12%,transparent);border:1px solid var(--blocked);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-weight:600}
 .prio-pick{display:flex;gap:10px}
 .prio-pick label{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);cursor:pointer;flex:1}
 .prio-pick .circle,.prio-pick button{width:40px;height:40px;border-radius:50%;border:2px solid #0002;display:block;cursor:pointer;padding:0}
@@ -227,6 +228,13 @@ label.chk input{width:auto}
 .card .btn{margin:0 6px 6px 0}
 .legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:13.5px}
 .legend .task{margin:0;padding:3px 10px;cursor:default}
+.col-grid{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;font-size:14px;margin-bottom:4px}
+.col-grid .task{margin:0;padding:5px 10px;cursor:default}
+input[type=color]{width:52px;height:36px;padding:2px;border-radius:9px;cursor:pointer;background:var(--surface)}
+.pal{display:flex;flex-wrap:wrap;gap:8px}
+.pal-it{position:relative}
+.pal-it button{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:0;background:var(--text);color:var(--bg);font-size:11px;line-height:1;cursor:pointer}
+.card .lbl:first-of-type{margin-top:6px}
 
 #toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;
   background:var(--text);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600;
@@ -293,14 +301,25 @@ const DEFAULT_CATS = {
 const CAT_KINDS = [['task', 'Tâches'], ['wait', 'Attentes'], ['need', 'Besoins']];
 const NOCAT = 'Sans catégorie';
 // couleurs aléatoires des tâches (évite le vert = terminé et le violet = bloqué)
-const TASK_COLORS = ['#0284c7', '#0d9488', '#db2777', '#92400e', '#475569', '#0891b2', '#d97706', '#e11d48', '#1e3a8a', '#c2410c', '#be185d', '#0f766e', '#78716c', '#2563eb', '#a16207', '#9f1239'];
+const TASK_COLORS_DEFAULT = ['#0284c7', '#0d9488', '#db2777', '#92400e', '#475569', '#0891b2', '#d97706', '#e11d48', '#1e3a8a', '#c2410c', '#be185d', '#0f766e', '#78716c', '#2563eb', '#a16207', '#9f1239'];
 // couleur fixe de chaque jour : [fond, texte]
-const DAY_COLORS = [['#9ca3af', '#1b1b1b'], ['#facc15', '#1b1b1b'], ['#f97316', '#fff'], ['#3b82f6', '#fff'], ['#22c55e', '#fff'], ['#ef4444', '#fff'], ['#ffffff', '#1b1b1b']];
+const DEFAULT_COLORS = {
+  prio: { red: '#ef4444', orange: '#f97316', yellow: '#facc15', white: '#ffffff' },
+  done: '#22c55e', blocked: '#8b5cf6', late: '#ef4444', arrive: '#f97316', accent: '',
+  days: ['#9ca3af', '#facc15', '#f97316', '#3b82f6', '#22c55e', '#ef4444', '#ffffff'],
+  palette: TASK_COLORS_DEFAULT
+};
+// texte noir ou blanc selon la clarté du fond
+function txt(hex) {
+  const n = parseInt(String(hex || '#000').slice(1, 7), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? '#1b1b1b' : '#ffffff';
+}
+const dayColor = d => [S.colors.days[d], txt(S.colors.days[d])];
 const HALVES = [['am', 'Matin'], ['pm', 'Après-midi']];
 const halfShort = p => p === 'pm' ? 'aprèm' : 'matin';
-function pickColor(tasks, avoid) {
+function pickColor(tasks, avoid, pal = S.colors.palette) {
   const use = c => tasks.filter(t => t.color === c && (t.status === 'todo' || t.status === 'blocked')).length;
-  const pool = TASK_COLORS.filter(c => c !== avoid), min = Math.min(...pool.map(use));
+  const pool = pal.length > 1 ? pal.filter(c => c !== avoid) : pal, min = Math.min(...pool.map(use));
   const best = pool.filter(c => use(c) === min);
   return best[Math.floor(Math.random() * best.length)];
 }
@@ -315,21 +334,37 @@ const MAX_DAYS = 14;
              slots: [{ d: 'AAAA-MM-JJ' | null, ok: bool, o: ordre }],   // un slot = une journée de travail
              needs: [{ id, text, ok }] }                                  // besoins (achats, matériel…) */
 function defaults() {
-  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), colors: JSON.parse(JSON.stringify(DEFAULT_COLORS)), settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
 }
 function load() {
   const d = defaults();
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; }
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); }
   } catch (e) {}
   PlanningLogic.migrate(d);
   fixCats(d);
   return d;
 }
+function mergeColors(d, c) {
+  if (!c) return;
+  const ok = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  for (const k in d.colors.prio) if (c.prio && ok(c.prio[k])) d.colors.prio[k] = c.prio[k];
+  for (const k of ['done', 'blocked', 'late', 'arrive', 'accent']) if (ok(c[k])) d.colors[k] = c[k];
+  if (Array.isArray(c.days) && c.days.length === 7 && c.days.every(ok)) d.colors.days = c.days;
+  if (Array.isArray(c.palette) && c.palette.length && c.palette.every(ok)) d.colors.palette = c.palette;
+}
+function applyColors() {
+  const C = S.colors, st = document.documentElement.style, set = (k, v) => st.setProperty(k, v);
+  for (const k in C.prio) { set('--pr-' + k, C.prio[k]); set('--pr-' + k + '-t', txt(C.prio[k])); }
+  set('--done', C.done); set('--done-t', txt(C.done));
+  set('--blocked', C.blocked); set('--blocked-t', txt(C.blocked));
+  set('--red', C.late); set('--orange', C.arrive);
+  if (C.accent) set('--accent', C.accent); else st.removeProperty('--accent');
+}
 // toute catégorie utilisée mais absente des listes y est rajoutée
 function fixCats(d) {
-  for (const t of d.tasks) { if (!t.color) t.color = pickColor(d.tasks); for (const x of t.slots) if (x.p !== 'pm') x.p = 'am'; }
+  for (const t of d.tasks) { if (!t.color) t.color = pickColor(d.tasks, null, d.colors.palette); for (const x of t.slots) if (x.p !== 'pm') x.p = 'am'; }
   const add = (k, c) => { if (c && !d.cats[k].includes(c)) d.cats[k].push(c); };
   for (const t of d.tasks) { add('task', t.cat); for (const n of t.needs) add('need', n.cat); }
   for (const w of d.waits) add('wait', w.cat);
@@ -373,6 +408,7 @@ function whenText(t) {
 /* ---------- rendu ---------- */
 function render(keepScroll = true) {
   const main = $('#main'), st = main.scrollTop, bl = $('.board')?.scrollLeft;
+  applyColors();
   if (S.settings.theme === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.dataset.theme = S.settings.theme;
   const v = S.settings.view;
@@ -406,7 +442,7 @@ function chip(t, o = {}) {
   if (o.full) {
     meta = `<span class="meta">${esc(catLabel(t.cat))} · ${whenText(t)}</span>`;
   }
-  return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}" style="--tc:${t.color || '#475569'}"><i class="psq" data-p="${t.prio}" title="Importance"></i><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
+  return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}" style="--tc:${t.color || '#475569'};--tt:${txt(t.color || '#475569')}"><i class="psq" data-p="${t.prio}" title="Importance"></i><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
 }
 
 function renderPlanning() {
@@ -431,7 +467,7 @@ function renderPlanning() {
     for (let d = 0; d < 7; d++) {
       const day = addDays(ws, d);
       const waits = S.waits.filter(x => x.date === day);
-      h += `<div class="day d${d}${day === t ? ' today' : ''}${day < t ? ' past' : ''}" style="--dc:${DAY_COLORS[d][0]};--dt:${DAY_COLORS[d][1]}">
+      h += `<div class="day d${d}${day === t ? ' today' : ''}${day < t ? ' past' : ''}" style="--dc:${dayColor(d)[0]};--dt:${dayColor(d)[1]}">
         <div class="day-h"><span>${DAYS[d]} ${parse(day).getDate()}${day === t ? " · aujourd'hui" : ''}</span></div>
         ${HALVES.map(([p, l]) => `<div class="half" data-drop="${day}" data-p="${p}"><div class="half-l"><span>${l}</span><button class="add" data-act="add-day" data-day="${day}" data-p="${p}" aria-label="Ajouter une tâche ${l.toLowerCase()}">+</button></div>
           <div class="tasks">${slotsOn(day, p).map(x => chip(x.t, { slot: x.i })).join('')}</div></div>`).join('')}
@@ -463,9 +499,9 @@ function listHTML() {
   const all = S.tasks.filter(t => catMatch(t, c) && (!q || [t.title, t.note, ...t.needs.map(n => n.text)].join(' ').toLowerCase().includes(q)));
   const byDate = (a, b) => firstDate(a).localeCompare(firstDate(b)) || a.created - b.created;
   const groups = [];
-  if (f === 'active' || f === 'all') for (const [k, l] of PRIOS) groups.push([l, `var(--${k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
-  if (['active', 'blocked', 'all'].includes(f)) groups.push(['Bloquées / en attente', 'var(--violet)', all.filter(t => t.status === 'blocked').sort(byPrio)]);
-  if (f === 'done' || f === 'all') groups.push(['Terminées', 'var(--green)', all.filter(t => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))]);
+  if (f === 'active' || f === 'all') for (const [k, l] of PRIOS) groups.push([l, `var(--pr-${k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
+  if (['active', 'blocked', 'all'].includes(f)) groups.push(['Bloquées / en attente', 'var(--blocked)', all.filter(t => t.status === 'blocked').sort(byPrio)]);
+  if (f === 'done' || f === 'all') groups.push(['Terminées', 'var(--done)', all.filter(t => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))]);
   if (f === 'cancelled' || f === 'all') groups.push(['Barrées', 'var(--surface2)', all.filter(t => t.status === 'cancelled').sort(byPrio)]);
   const html = groups.filter(g => g[2].length).map(([l, col, ts]) =>
     `<div class="group"><h3><span class="sw" style="background:${col}"></span>${l} · ${ts.length}</h3>${ts.map(t => chip(t, { full: true })).join('')}</div>`).join('');
@@ -534,6 +570,8 @@ function renderWaits() {
   el.innerHTML = h;
 }
 
+function colIn(path, v) { return `<input type="color" data-col="${path}" value="${/^#[0-9a-f]{6}$/i.test(v) ? v : '#2563eb'}" aria-label="Couleur">`; }
+function setCol(path, v) { const [a, b] = path.split('.'); if (b == null) S.colors[a] = v; else S.colors[a][b] = v; }
 function renderSettings() {
   $('#viewTitle').textContent = 'Réglages';
   $('#headerTools').innerHTML = '';
@@ -544,15 +582,26 @@ function renderSettings() {
     <p>Une notification résume en permanence les tâches du jour, celles en retard, les colis attendus et les besoins à obtenir. Elle se met à jour à chaque ouverture de l'app et à chaque changement.<br><b>${permTxt}</b></p>
     <button class="btn primary" data-act="notif-on">Activer</button><button class="btn" data-act="notif-test">Tester</button>
     <p style="margin-top:6px">Sur iPhone : ouvrir dans Safari → Partager → « Sur l'écran d'accueil », puis activer depuis l'app installée. Sur Android : menu Chrome → « Installer l'application ».</p></div>
-  <div class="card"><h3>🎨 Couleurs</h3><div class="legend">
-    <span class="task rc" style="--tc:#0d9488"><i class="psq" data-p="red"></i>Tâche</span><span>Chaque tâche a sa propre couleur (aléatoire, 🎲 pour en changer). Le petit carré = importance :</span>
-    <span class="task p-red">Rouge</span><span>Urgent</span>
-    <span class="task p-orange">Orange</span><span>Important</span>
-    <span class="task p-yellow">Jaune</span><span>Normal</span>
-    <span class="task p-white">Blanc</span><span>Faible</span>
-    <span class="task c-done"><span class="t-title">Vert</span></span><span>Terminée</span>
-    <span class="task c-blocked">Violet</span><span>Bloquée (en attente de quelque chose)</span>
-    <span class="task c-cancel" data-p="orange"><span class="t-title">Barrée</span></span><span>Abandonnée</span></div>
+  <div class="card"><h3>🎨 Couleurs</h3>
+    <p>Touche un carré de couleur pour la changer. Le texte passe automatiquement en noir ou blanc selon la couleur.</p>
+    <div class="lbl">Importance (petit carré)</div>
+    <div class="col-grid">${PRIOS.map(([k, l]) => `<span class="task p-${k}">${l}</span>${colIn('prio.' + k, S.colors.prio[k])}`).join('')}</div>
+    <div class="lbl">États</div>
+    <div class="col-grid">
+      <span class="task c-done"><span class="t-title">Terminée</span></span>${colIn('done', S.colors.done)}
+      <span class="task c-blocked">Bloquée (en attente)</span>${colIn('blocked', S.colors.blocked)}</div>
+    <div class="lbl">Jours</div>
+    <div class="col-grid">${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map((l, d) => `<span class="task" style="background:${dayColor(d)[0]};color:${dayColor(d)[1]};border-color:#00000026">${l}</span>${colIn('days.' + d, S.colors.days[d])}`).join('')}</div>
+    <div class="lbl">Couleurs des tâches (tirées au hasard)</div>
+    <div class="pal">${S.colors.palette.map((c, i) => `<span class="pal-it">${colIn('palette.' + i, c)}${S.colors.palette.length > 1 ? `<button data-act="pal-del" data-i="${i}" aria-label="Retirer cette couleur">✕</button>` : ''}</span>`).join('')}
+      <button class="btn sm" data-act="pal-add" style="height:36px">+ Ajouter</button></div>
+    <button class="btn sm" data-act="recolor-all" style="margin-top:10px">🎲 Redistribuer les couleurs des tâches</button>
+    <div class="lbl">Alertes et interface</div>
+    <div class="col-grid">
+      <span>Tâche en retard</span>${colIn('late', S.colors.late)}
+      <span>Attente qui arrive (fenêtre Attentes)</span>${colIn('arrive', S.colors.arrive)}
+      <span>Couleur principale (aujourd'hui, boutons)</span>${colIn('accent', S.colors.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim())}</div>
+    <button class="btn danger" data-act="colors-reset" style="margin-top:12px">Rétablir les couleurs d'origine</button>
     <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter, l'étaler sur plusieurs jours, lui ajouter des besoins ou la bloquer.<br>
     <b>j2/3</b> = 2ᵉ jour sur 3 · <b>×2</b> = 2 jours encore à placer · <b>🛒2</b> = 2 besoins à obtenir.</p></div>
   <div class="card"><h3>🏷️ Catégories</h3>
@@ -728,8 +777,13 @@ function setDays(t, n) {
   }
 }
 const baseDay = s => s.d && s.d > today() ? s.d : today();
+function hslHex(h, s, l) {
+  s /= 100; l /= 100;
+  const f = n => { const k = (n + h / 30) % 12, c = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return Math.round(c * 255).toString(16).padStart(2, '0'); };
+  return '#' + f(0) + f(8) + f(4);
+}
 function commit(msg, undo) { save(); render(); if (msg) toast(msg, undo); }
-function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits, cats: S.cats }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; S.cats = x.cats; closeSheet(); commit(); }; }
+function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; S.cats = x.cats; S.colors = x.colors; closeSheet(); commit(); }; }
 function refreshSheet() { if (ui.cur && !$('#sheet').classList.contains('hidden') && $('#daysSel')) openTask(ui.cur, ui.slot, true); }
 
 function act(a, el, e) {
@@ -789,6 +843,10 @@ function act(a, el, e) {
     case 'cat': S.settings.cat = el.dataset.v; save(); render(false); return;
     case 'fd': $('#taskForm [name=date]').value = el.dataset.v; return;
     case 'theme': S.settings.theme = el.dataset.v; save(); render(); return;
+    case 'pal-add': { const h = Math.floor(Math.random() * 360); const c = hslHex(h, 65, 42); S.colors.palette.push(c); commit('Couleur ajoutée'); return; }
+    case 'pal-del': { const u = snapshot(); S.colors.palette.splice(+el.dataset.i, 1); commit('Couleur retirée', u); return; }
+    case 'recolor-all': { const u = snapshot(); S.tasks.forEach(x => x.color = null); S.tasks.forEach(x => x.color = pickColor(S.tasks)); commit('Couleurs redistribuées', u); return; }
+    case 'colors-reset': { if (!confirm('Remettre toutes les couleurs d’origine ?')) return; const u = snapshot(); S.colors = JSON.parse(JSON.stringify(DEFAULT_COLORS)); commit('Couleurs d’origine rétablies', u); return; }
     case 'notif-on': enableNotif(); return;
     case 'notif-test': notify(true); return;
     case 'export': exportData(); return;
@@ -898,10 +956,13 @@ document.addEventListener('change', e => {
     const k = unplaced(t);
     commit(`Étalée sur ${t.slots.length} jour${t.slots.length > 1 ? 's' : ''}${k ? ` · ${k} à placer dans « À planifier »` : ''}`, u);
     ui.slot = null; refreshSheet();
+  } else if (e.target.dataset && e.target.dataset.col) {
+    setCol(e.target.dataset.col, e.target.value); commit();
   } else if (e.target.id === 'importFile') importData(e.target.files[0]);
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'q') { ui.q = e.target.value; $('#taskList').innerHTML = listHTML(); }
+  else if (e.target.dataset && e.target.dataset.col) { setCol(e.target.dataset.col, e.target.value); applyColors(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
@@ -1018,7 +1079,7 @@ mainEl.addEventListener('contextmenu', e => { if (e.target.closest('.task')) e.p
 
 /* ---------- sauvegarde fichier ---------- */
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: 'planning', v: 3, tasks: S.tasks, waits: S.waits, cats: S.cats }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'planning', v: 4, tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planning-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
@@ -1029,7 +1090,7 @@ function importData(file) {
     if (!Array.isArray(x.tasks)) throw new Error('format');
     if (!confirm(`Remplacer les données actuelles par ce fichier (${x.tasks.length} tâches) ?`)) return;
     const u = snapshot(); const m = PlanningLogic.migrate({ tasks: x.tasks, waits: x.waits || [] });
-    S.tasks = m.tasks; S.waits = m.waits; if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) S.cats[k] = x.cats[k]; fixCats(S); commit('Import terminé', u);
+    S.tasks = m.tasks; S.waits = m.waits; if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) S.cats[k] = x.cats[k]; mergeColors(S, x.colors); fixCats(S); commit('Import terminé', u);
   }).catch(() => toast('Fichier invalide'));
 }
 
