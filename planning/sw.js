@@ -1,6 +1,6 @@
 /* Service worker : hors-ligne + rappel périodique (Android / Chrome installé) */
 importScripts('logic.js');
-const VERSION = 'planning-v2';
+const VERSION = 'planning-v3';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'badge-96.png', 'logic.js'];
 const STATE = 'planning-state';
 const TAG = 'planning-resume';

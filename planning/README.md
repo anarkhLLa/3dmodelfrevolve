@@ -9,6 +9,7 @@ App de planning très simple (PWA : s'installe sur l'écran d'accueil, marche ho
 - **Besoins** : chaque tâche a sa liste (ex. « 2 paquets de vis »), visible dans l'onglet 🛒 Besoins où on les coche une fois obtenus. 🛒2 sur une tâche = 2 besoins à obtenir.
 - **Toucher une tâche** : Terminé, Barrer, Reporter (+1 jour, +1 semaine, date au choix), Bloquer (violet + ajout aux attentes), changer la couleur, Modifier, Supprimer. « Annuler » dans le message en bas pour revenir en arrière.
 - **Fenêtre Attentes** (toujours visible en haut) : colis, pièces, outils… Devient orange le jour de l'arrivée prévue. « Reçu » débloque automatiquement la tâche liée.
+- **Catégories** (Réglages → Catégories) : trois listes modifiables — Tâches, Attentes, Besoins. Ajouter, renommer ✎ (tout ce qui l'utilise suit), monter ↑, supprimer ✕ (les éléments passent en « Sans catégorie »). Les attentes sont regroupées par catégorie dans la fenêtre Attentes ; l'onglet Besoins peut s'afficher « Par tâche » ou « Par catégorie » (pratique comme liste de courses). Toucher une attente ou un besoin permet de le modifier.
 - **Notifications** (Réglages → Activer) : résumé des tâches du jour, en retard, des colis attendus et des besoins non remplis.
 - **Sauvegarde** : données stockées sur le téléphone, export/import d'un fichier JSON dans Réglages.
 

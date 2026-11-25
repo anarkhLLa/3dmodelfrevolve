@@ -59,6 +59,21 @@ header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
 .w-row.late .w-when{color:var(--red);font-weight:700}
 .w-add{display:grid;grid-template-columns:1fr auto;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
 .w-add input[name=title]{grid-column:1/-1}
+.w-add{grid-template-columns:1fr 1fr auto}
+.w-grp{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:10px 0 2px}
+.w-txt{cursor:pointer}
+.ctag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:0 6px;background:var(--surface2);color:var(--muted);margin-left:4px;vertical-align:1px;white-space:nowrap}
+.need span{cursor:pointer}
+.need-add select{flex:none;width:auto;max-width:42%}
+.cat-ed{margin-bottom:6px}
+.cat-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--line)}
+.cat-row span{flex:1;min-width:0;font-weight:650;overflow-wrap:anywhere}
+.cat-row small{white-space:nowrap}
+.cat-row button{border:1px solid var(--line);background:var(--surface2);border-radius:8px;min-width:32px;height:30px;cursor:pointer}
+.cat-row button:disabled{opacity:.35}
+.cat-add{display:flex;gap:6px;margin-top:8px}
+.cat-add input{flex:1}
+.card .cat-add .btn{margin:0}
 
 main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:10px 0 96px;overscroll-behavior:contain}
 nav{display:flex;background:var(--surface);border-top:1px solid var(--line);flex:none;padding-bottom:env(safe-area-inset-bottom)}
@@ -151,7 +166,8 @@ body.dragging .board{scroll-snap-type:none}
 .need-card .need:last-child{border-bottom:0}
 .add-need{margin:0 12px 14px;display:grid;grid-template-columns:1fr;gap:6px}
 .add-need .row2{display:flex;gap:6px}
-.add-need .row2 input{flex:1}
+.add-need .row2 input{flex:1;min-width:0}
+.add-need .row2 select{flex:none;width:auto;max-width:45%}
 
 /* Sheet */
 .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
@@ -261,7 +277,16 @@ function weekNo(s) {
 
 const PRIOS = [['red', 'Urgent'], ['orange', 'Important'], ['yellow', 'Normal'], ['white', 'Faible']];
 const PRIO_RANK = PlanningLogic.RANK;
-const CATS = ['Projet', 'Pièce client', 'Vente', 'Autre'];
+const DEFAULT_CATS = {
+  task: ['Projet', 'Pièce client', 'Vente', 'Autre'],
+  wait: ['Colis', 'Pièce client', 'Outil', 'Paiement'],
+  need: ['Quincaillerie', 'Matériaux', 'Outillage', 'Autre']
+};
+const CAT_KINDS = [['task', 'Tâches'], ['wait', 'Attentes'], ['need', 'Besoins']];
+const NOCAT = 'Sans catégorie';
+const catLabel = c => c || NOCAT;
+// liste déroulante de catégories (kind : task | wait | need)
+const catSelect = (kind, name, val) => `<select name="${name}" aria-label="Catégorie">${S.cats[kind].map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(c)}</option>`).join('')}<option value=""${val && S.cats[kind].includes(val) ? '' : ' selected'}>${NOCAT}</option></select>`;
 const KEY = 'planning.v1';
 const MAX_DAYS = 14;
 
@@ -270,18 +295,26 @@ const MAX_DAYS = 14;
              slots: [{ d: 'AAAA-MM-JJ' | null, ok: bool, o: ordre }],   // un slot = une journée de travail
              needs: [{ id, text, ok }] }                                  // besoins (achats, matériel…) */
 function defaults() {
-  return { tasks: [], waits: [], settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
 }
 function load() {
   const d = defaults();
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); }
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; }
   } catch (e) {}
-  return PlanningLogic.migrate(d);
+  PlanningLogic.migrate(d);
+  fixCats(d);
+  return d;
+}
+// toute catégorie utilisée mais absente des listes y est rajoutée
+function fixCats(d) {
+  const add = (k, c) => { if (c && !d.cats[k].includes(c)) d.cats[k].push(c); };
+  for (const t of d.tasks) { add('task', t.cat); for (const n of t.needs) add('need', n.cat); }
+  for (const w of d.waits) add('wait', w.cat);
 }
 let S = load();
-let ui = { q: '', cur: null, slot: null };
+let ui = { q: '', cur: null, slot: null, wait: null, need: null, needCat: null };
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
   persistForSW(); queueNotify();
@@ -350,7 +383,7 @@ function chip(t, o = {}) {
   let meta = '';
   if (o.full) {
     const dot = t.status !== 'todo' ? `<i class="pdot" data-p="${t.prio}"></i>` : '';
-    meta = `<span class="meta">${dot}${esc(t.cat)} · ${whenText(t)}</span>`;
+    meta = `<span class="meta">${dot}${esc(catLabel(t.cat))} · ${whenText(t)}</span>`;
   }
   return `<div class="task ${cls}${late ? ' late' : ''}" data-id="${t.id}" data-slot="${o.slot ?? ''}" data-p="${t.prio}"><span class="t-title">${esc(t.title)}</span>${tag}${sub}${meta}</div>`;
 }
@@ -393,17 +426,19 @@ function renderTasks() {
   $('#viewTitle').textContent = 'Toutes les tâches';
   $('#headerTools').innerHTML = '';
   const f = S.settings.filter, c = S.settings.cat;
-  const inCat = S.tasks.filter(t => !c || t.cat === c);
+  const inCat = S.tasks.filter(t => catMatch(t, c));
+  const hasNone = S.tasks.some(t => !t.cat);
   const count = k => inCat.filter(t => k === 'all' || (k === 'active' ? isActive(t) : t.status === k)).length;
   $('#main').innerHTML = `
     <div class="chips">${FILTERS.map(([k, l]) => `<button class="chip${f === k ? ' on' : ''}" data-act="filter" data-v="${k}">${l}<span class="n">${count(k)}</span></button>`).join('')}</div>
-    <div class="chips">${['', ...CATS].map(k => `<button class="chip${c === k ? ' on' : ''}" data-act="cat" data-v="${esc(k)}">${k || 'Toutes catégories'}</button>`).join('')}</div>
+    <div class="chips">${['', ...S.cats.task, ...(hasNone ? ['__none'] : [])].map(k => `<button class="chip${c === k ? ' on' : ''}" data-act="cat" data-v="${esc(k)}">${k === '__none' ? NOCAT : esc(k) || 'Toutes catégories'}</button>`).join('')}</div>
     <div class="search"><input id="q" type="search" placeholder="Rechercher…" value="${esc(ui.q)}"></div>
     <div id="taskList">${listHTML()}</div>`;
 }
+function catMatch(t, c) { return !c || (c === '__none' ? !t.cat : t.cat === c); }
 function listHTML() {
   const f = S.settings.filter, c = S.settings.cat, q = ui.q.trim().toLowerCase();
-  const all = S.tasks.filter(t => (!c || t.cat === c) && (!q || [t.title, t.note, ...t.needs.map(n => n.text)].join(' ').toLowerCase().includes(q)));
+  const all = S.tasks.filter(t => catMatch(t, c) && (!q || [t.title, t.note, ...t.needs.map(n => n.text)].join(' ').toLowerCase().includes(q)));
   const byDate = (a, b) => firstDate(a).localeCompare(firstDate(b)) || a.created - b.created;
   const groups = [];
   if (f === 'active' || f === 'all') for (const [k, l] of PRIOS) groups.push([l, `var(--${k})`, all.filter(t => t.status === 'todo' && t.prio === k).sort(byDate)]);
@@ -415,24 +450,36 @@ function listHTML() {
   return html || `<p class="empty" style="text-align:center;padding:30px 20px">Aucune tâche ici.<br>Touche <b>+</b> pour en ajouter une.</p>`;
 }
 
-function needRow(t, n) {
-  return `<div class="need${n.ok ? ' ok' : ''}"><button class="ck" data-act="need-tog" data-tid="${t.id}" data-nid="${n.id}" aria-label="${n.ok ? 'Marquer à obtenir' : 'Marquer obtenu'}">${n.ok ? '✓' : ''}</button><span>${esc(n.text)}</span><button class="x" data-act="need-del" data-tid="${t.id}" data-nid="${n.id}" aria-label="Supprimer">✕</button></div>`;
+function needRow(t, n, showTask) {
+  return `<div class="need${n.ok ? ' ok' : ''}"><button class="ck" data-act="need-tog" data-tid="${t.id}" data-nid="${n.id}" aria-label="${n.ok ? 'Marquer à obtenir' : 'Marquer obtenu'}">${n.ok ? '✓' : ''}</button><span data-act="need-edit" data-tid="${t.id}" data-nid="${n.id}">${esc(n.text)}${showTask ? `<small> · ${esc(t.title)}</small>` : `<i class="ctag">${esc(catLabel(n.cat))}</i>`}</span><button class="x" data-act="need-del" data-tid="${t.id}" data-nid="${n.id}" aria-label="Supprimer">✕</button></div>`;
 }
 function renderNeeds() {
   $('#viewTitle').textContent = 'Besoins';
   $('#headerTools').innerHTML = '';
-  const f = S.settings.needsF;
-  const live = S.tasks.filter(t => t.status !== 'cancelled');
-  const cnt = ok => live.filter(t => ok || isActive(t)).reduce((k, t) => k + t.needs.filter(n => n.ok === ok).length, 0);
-  const tasks = live.filter(t => (f === 'ok' || isActive(t)) && t.needs.some(n => n.ok === (f === 'ok'))).sort(byPrio);
+  const f = S.settings.needsF, by = S.settings.needsBy, want = f === 'ok';
+  const live = S.tasks.filter(t => t.status !== 'cancelled' && (want || isActive(t)));
+  const cnt = ok => S.tasks.filter(t => t.status !== 'cancelled' && (ok || isActive(t))).reduce((k, t) => k + t.needs.filter(n => n.ok === ok).length, 0);
   const act = S.tasks.filter(isActive).sort(byPrio);
+  let cards = '';
+  if (by === 'task') {
+    cards = live.filter(t => t.needs.some(n => n.ok === want)).sort(byPrio)
+      .map(t => `<div class="need-card">${chip(t, { full: true })}${t.needs.filter(n => n.ok === want).map(n => needRow(t, n)).join('')}</div>`).join('');
+  } else {
+    const rows = [];
+    for (const t of live) for (const n of t.needs) if (n.ok === want) rows.push({ t, n });
+    for (const c of [...S.cats.need, '']) {
+      const rs = rows.filter(r => (S.cats.need.includes(r.n.cat) ? r.n.cat : '') === c);
+      if (rs.length) cards += `<div class="need-card"><h3 style="margin:2px 0 4px;font-size:15px">${esc(catLabel(c))} · ${rs.length}</h3>${rs.map(r => needRow(r.t, r.n, true)).join('')}</div>`;
+    }
+  }
   $('#main').innerHTML = `
-    <div class="chips"><button class="chip${f === 'todo' ? ' on' : ''}" data-act="needsF" data-v="todo">À obtenir<span class="n">${cnt(false)}</span></button><button class="chip${f === 'ok' ? ' on' : ''}" data-act="needsF" data-v="ok">Obtenus<span class="n">${cnt(true)}</span></button></div>
+    <div class="chips"><button class="chip${f === 'todo' ? ' on' : ''}" data-act="needsF" data-v="todo">À obtenir<span class="n">${cnt(false)}</span></button><button class="chip${f === 'ok' ? ' on' : ''}" data-act="needsF" data-v="ok">Obtenus<span class="n">${cnt(true)}</span></button>
+      <button class="chip${by === 'task' ? ' on' : ''}" data-act="needsBy" data-v="task" style="margin-left:auto">Par tâche</button><button class="chip${by === 'cat' ? ' on' : ''}" data-act="needsBy" data-v="cat">Par catégorie</button></div>
     ${act.length ? `<form id="needForm2" class="add-need">
       <select name="task" aria-label="Tâche">${act.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select>
-      <div class="row2"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160"><button class="btn primary">Ajouter</button></div></form>` : ''}
-    ${tasks.map(t => `<div class="need-card">${chip(t, { full: true })}${t.needs.filter(n => n.ok === (f === 'ok')).map(n => needRow(t, n)).join('')}</div>`).join('')
-      || `<p class="empty" style="text-align:center;padding:30px 20px">${f === 'ok' ? 'Rien d’obtenu pour l’instant.' : 'Aucun besoin en attente 👍<br>Ajoute-en depuis une tâche ou avec le formulaire ci-dessus.'}</p>`}`;
+      <div class="row2"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160">${catSelect('need', 'cat', S.cats.need[0])}</div>
+      <button class="btn primary">Ajouter le besoin</button></form>` : ''}
+    ${cards || `<p class="empty" style="text-align:center;padding:30px 20px">${want ? 'Rien d’obtenu pour l’instant.' : 'Aucun besoin en attente 👍<br>Ajoute-en depuis une tâche ou avec le formulaire ci-dessus.'}</p>`}`;
 }
 
 function waitWhen(w) {
@@ -448,18 +495,19 @@ function renderWaits() {
   const ws = S.waits.slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'));
   const hot = ws.filter(w => w.date && w.date <= t);
   let line;
-  if (hot.length) line = hot.map(w => `${esc(w.title)} : ${w.date === t ? "arrive aujourd'hui" : 'en retard'}`).join(' · ');
+  if (hot.length) line = hot.map(w => `${w.cat ? esc(w.cat) + ' · ' : ''}${esc(w.title)} : ${w.date === t ? "arrive aujourd'hui" : 'en retard'}`).join(' · ');
   else if (ws.length) line = `Prochaine : ${esc(ws[0].title)}${ws[0].date ? ' · ' + fmtRel(ws[0].date) : ''}`;
   else line = 'Rien en attente';
   const el = $('#waits');
   el.className = 'waits' + (hot.length ? ' alert' : '');
   let h = `<div class="waits-h" data-act="waits"><b>📦 Attentes${ws.length ? ` (${ws.length})` : ''}</b><span class="waits-hot">${line}</span><span>${open ? '▴' : '▾'}</span></div>`;
   if (open) {
-    h += '<div class="waits-body">' + ws.map(w => {
+    const groups = [...S.cats.wait, ''].map(c => [c, ws.filter(w => (S.cats.wait.includes(w.cat) ? w.cat : '') === c)]).filter(g => g[1].length);
+    h += '<div class="waits-body">' + groups.map(([c, list]) => `<div class="w-grp">${esc(catLabel(c))} · ${list.length}</div>` + list.map(w => {
       const [cls, when] = waitWhen(w); const task = w.taskId && find(w.taskId);
-      return `<div class="w-row ${cls}"><div class="w-txt"><b>${esc(w.title)}</b><small class="w-when">${when}</small>${task ? `<small> · bloque « ${esc(task.title)} »</small>` : ''}</div>
+      return `<div class="w-row ${cls}"><div class="w-txt" data-act="w-edit" data-id="${w.id}"><b>${esc(w.title)}</b><small class="w-when">${when}</small>${task ? `<small> · bloque « ${esc(task.title)} »</small>` : ''}</div>
         <button class="btn sm ok" data-act="w-ok" data-id="${w.id}">✓ Reçu</button><button class="btn sm" data-act="w-del" data-id="${w.id}" aria-label="Supprimer">✕</button></div>`;
-    }).join('') + `<form id="wForm" class="w-add"><input name="title" placeholder="Colis, pièce, outil, paiement…" required><input type="date" name="date" value="${addDays(t, 1)}"><button class="btn primary">Ajouter</button></form></div>`;
+    }).join('')).join('') + `<form id="wForm" class="w-add"><input name="title" placeholder="Colis, pièce, outil, paiement…" required>${catSelect('wait', 'cat', S.cats.wait[0])}<input type="date" name="date" value="${addDays(t, 1)}"><button class="btn primary">Ajouter</button></form></div>`;
   }
   el.innerHTML = h;
 }
@@ -484,6 +532,9 @@ function renderSettings() {
     <span class="task c-cancel" data-p="orange"><span class="t-title">Barrée</span></span><span>Abandonnée</span></div>
     <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter, l'étaler sur plusieurs jours, lui ajouter des besoins ou la bloquer.<br>
     <b>j2/3</b> = 2ᵉ jour sur 3 · <b>×2</b> = 2 jours encore à placer · <b>🛒2</b> = 2 besoins à obtenir.</p></div>
+  <div class="card"><h3>🏷️ Catégories</h3>
+    <p>Ajoute, renomme (✎), range (↑) ou supprime (✕) les catégories. Le chiffre indique combien d'éléments les utilisent.</p>
+    ${CAT_KINDS.map(([k, l]) => catEditor(k, l)).join('')}</div>
   <div class="card"><h3>Thème</h3>
     <div class="seg" style="display:inline-flex">${[['auto', 'Auto'], ['light', 'Clair'], ['dark', 'Sombre']].map(([k, l]) => `<button data-act="theme" data-v="${k}" class="${S.settings.theme === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
   <div class="card"><h3>💾 Sauvegarde</h3>
@@ -516,7 +567,7 @@ function openTask(id, slot, keep) {
   const i = ui.slot, s = t.slots[i], n = t.slots.length, w = waitFor(t), nu = unmet(t).length;
   const multi = n > 1;
   openSheet(`
-    <div class="sh-head">${chip(t, { slot: i })}<div class="muted" style="margin-top:6px;font-size:13px">${esc(t.cat)} · ${whenText(t)}</div>
+    <div class="sh-head">${chip(t, { slot: i })}<div class="muted" style="margin-top:6px;font-size:13px">${esc(catLabel(t.cat))} · ${whenText(t)}</div>
     ${multi ? `<div class="hint">Jour sélectionné : <b>${s.d ? `j${slotRank(t, i)}/${n} · ${fmtRel(s.d)}` : 'pas encore placé'}</b></div>` : ''}
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}</div>
     <h4>État</h4>
@@ -534,7 +585,7 @@ function openTask(id, slot, keep) {
     <div class="hint">${unplaced(t) ? `${unplaced(t)} jour${unplaced(t) > 1 ? 's' : ''} à placer : glisse la tâche depuis « À planifier » autant de fois que nécessaire.` : multi ? 'Tous les jours sont placés dans le planning.' : 'Choisis plusieurs jours pour pouvoir placer la tâche sur plusieurs cases.'}</div>
     <h4>Besoins${nu ? ` · ${nu} à obtenir` : ''}</h4>
     <div>${t.needs.map(x => needRow(t, x)).join('')}</div>
-    <form id="needForm" class="need-add"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160"><button class="btn">Ajouter</button></form>
+    <form id="needForm" class="need-add"><input name="text" placeholder="Ex : 2 paquets de vis" required maxlength="160">${catSelect('need', 'cat', ui.needCat ?? S.cats.need[0])}<button class="btn">+</button></form>
     <h4>Contrainte</h4>
     ${t.status === 'blocked'
       ? `<div class="blk">⏳ En attente : ${esc(t.block?.reason || '')}${w && w.date ? ` · prévu ${fmtRel(w.date)}` : ''}</div>${B('unblock', 'Débloquer (c\'est arrivé)', 'full')}`
@@ -546,14 +597,14 @@ function openTask(id, slot, keep) {
 
 function daysOptions(n) { return Array.from({ length: MAX_DAYS }, (_, k) => `<option value="${k + 1}"${k + 1 === n ? ' selected' : ''}>${k + 1} jour${k ? 's' : ''}</option>`).join(''); }
 function openForm(t, preset = {}) {
-  const v = t || { title: '', cat: preset.cat || CATS[0], prio: 'yellow', note: '', slots: [{ d: preset.date || null }] };
+  const v = t || { title: '', cat: preset.cat || S.cats.task[0] || '', prio: 'yellow', note: '', slots: [{ d: preset.date || null }] };
   const n = v.slots.length;
   ui.cur = t ? t.id : null;
   openSheet(`<h3>${t ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
     <form id="taskForm" autocomplete="off">
       <input name="title" value="${esc(v.title)}" placeholder="Que faut-il faire ?" required maxlength="200">
       <div class="lbl">Catégorie</div>
-      <div class="cat-pick">${CATS.map(c => `<label><input type="radio" name="cat" value="${c}"${c === v.cat ? ' checked' : ''}><span>${c}</span></label>`).join('')}</div>
+      <div class="cat-pick">${[...S.cats.task, ''].map(c => `<label><input type="radio" name="cat" value="${esc(c)}"${c === v.cat || (!c && !S.cats.task.includes(v.cat)) ? ' checked' : ''}><span>${esc(catLabel(c))}</span></label>`).join('')}</div>
       <div class="lbl">Importance</div>
       <div class="prio-pick">${PRIOS.map(([k, l]) => `<label><input type="radio" name="prio" value="${k}"${k === v.prio ? ' checked' : ''}><span class="circle p-${k}"></span>${l}</label>`).join('')}</div>
       ${n === 1 ? `<div class="lbl">${t ? 'Jour' : 'Premier jour'}</div>
@@ -576,11 +627,51 @@ function openBlock(t) {
       <div class="lbl">En attente de…</div>
       <input name="reason" required placeholder="Ex : réception de l'outil, pièce du client…" maxlength="160">
       <label class="chk"><input type="checkbox" name="addWait" checked> Ajouter à la fenêtre « Attentes »</label>
+      <div class="lbl">Catégorie de l'attente</div>
+      ${catSelect('wait', 'cat', S.cats.wait[0])}
       <div class="lbl">Arrivée prévue</div>
       <input type="date" name="date" value="${addDays(today(), 2)}">
       <button class="btn violet full" style="margin-top:14px">Bloquer la tâche</button>
     </form>`);
   setTimeout(() => $('#blockForm [name=reason]')?.focus(), 60);
+}
+
+function openWaitForm(w) {
+  ui.wait = w.id;
+  openSheet(`<h3>Modifier l'attente</h3>
+    <form id="wEdit"><input name="title" value="${esc(w.title)}" required maxlength="160">
+      <div class="lbl">Catégorie</div>${catSelect('wait', 'cat', w.cat)}
+      <div class="lbl">Arrivée prévue</div><input type="date" name="date" value="${w.date || ''}">
+      <button class="btn primary full" style="margin-top:14px">Enregistrer</button></form>`);
+}
+function openNeedForm(t, n) {
+  ui.need = { tid: t.id, nid: n.id, back: ui.cur };
+  openSheet(`<h3>Modifier le besoin</h3><div class="muted" style="margin:-4px 0 10px">Pour « ${esc(t.title)} »</div>
+    <form id="nEdit"><input name="text" value="${esc(n.text)}" required maxlength="160">
+      <div class="lbl">Catégorie</div>${catSelect('need', 'cat', n.cat)}
+      <label class="chk"><input type="checkbox" name="ok"${n.ok ? ' checked' : ''}> Obtenu</label>
+      <button class="btn primary full" style="margin-top:6px">Enregistrer</button></form>`);
+}
+
+/* ---------- catégories (réglages) ---------- */
+function catUsage(kind, c) {
+  if (kind === 'task') return S.tasks.filter(t => t.cat === c).length;
+  if (kind === 'wait') return S.waits.filter(w => w.cat === c).length;
+  return S.tasks.reduce((k, t) => k + t.needs.filter(n => n.cat === c).length, 0);
+}
+function catRetag(kind, from, to) {
+  if (kind === 'task') S.tasks.forEach(t => { if (t.cat === from) t.cat = to; });
+  else if (kind === 'wait') S.waits.forEach(w => { if (w.cat === from) w.cat = to; });
+  else S.tasks.forEach(t => t.needs.forEach(n => { if (n.cat === from) n.cat = to; }));
+  if (kind === 'task' && S.settings.cat === from) S.settings.cat = to;
+}
+function catEditor(kind, label) {
+  const list = S.cats[kind];
+  return `<div class="cat-ed"><div class="lbl">${label}</div>${list.map((c, i) => `<div class="cat-row"><span>${esc(c)}</span><small>${catUsage(kind, c) || ''}</small>
+      <button data-act="cat-up" data-k="${kind}" data-i="${i}" aria-label="Monter"${i ? '' : ' disabled'}>↑</button>
+      <button data-act="cat-ren" data-k="${kind}" data-i="${i}" aria-label="Renommer">✎</button>
+      <button data-act="cat-del" data-k="${kind}" data-i="${i}" aria-label="Supprimer">✕</button></div>`).join('') || '<p class="empty">Aucune catégorie.</p>'}
+    <form class="cat-add" data-kind="${kind}"><input name="name" placeholder="Nouvelle catégorie" required maxlength="40"><button class="btn">Ajouter</button></form></div>`;
 }
 
 /* ---------- actions ---------- */
@@ -610,7 +701,7 @@ function setDays(t, n) {
 }
 const baseDay = s => s.d && s.d > today() ? s.d : today();
 function commit(msg, undo) { save(); render(); if (msg) toast(msg, undo); }
-function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; closeSheet(); commit(); }; }
+function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits, cats: S.cats }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; S.cats = x.cats; closeSheet(); commit(); }; }
 function refreshSheet() { if (ui.cur && !$('#sheet').classList.contains('hidden') && $('#daysSel')) openTask(ui.cur, ui.slot, true); }
 
 function act(a, el, e) {
@@ -650,6 +741,22 @@ function act(a, el, e) {
       refreshSheet(); return;
     }
     case 'needsF': S.settings.needsF = el.dataset.v; save(); render(false); return;
+    case 'needsBy': S.settings.needsBy = el.dataset.v; save(); render(false); return;
+    case 'w-edit': { const w = S.waits.find(x => x.id === el.dataset.id); if (w) openWaitForm(w); return; }
+    case 'need-edit': { const tk = find(el.dataset.tid), nd = tk && tk.needs.find(x => x.id === el.dataset.nid); if (nd) openNeedForm(tk, nd); return; }
+    case 'cat-up': { const l = S.cats[el.dataset.k], i = +el.dataset.i; if (i > 0) { [l[i - 1], l[i]] = [l[i], l[i - 1]]; commit(); } return; }
+    case 'cat-ren': {
+      const k = el.dataset.k, l = S.cats[k], i = +el.dataset.i, old = l[i];
+      const nv = (prompt('Nouveau nom de la catégorie', old) || '').trim();
+      if (!nv || nv === old) return;
+      if (l.includes(nv)) { toast('Cette catégorie existe déjà'); return; }
+      const u = snapshot(); l[i] = nv; catRetag(k, old, nv); commit(`Renommée en « ${nv} »`, u); return;
+    }
+    case 'cat-del': {
+      const k = el.dataset.k, l = S.cats[k], i = +el.dataset.i, c = l[i], n = catUsage(k, c);
+      if (n && !confirm(`${n} élément(s) utilisent « ${c} ». Ils passeront en « ${NOCAT} ». Supprimer ?`)) return;
+      const u = snapshot(); l.splice(i, 1); catRetag(k, c, ''); commit(`Catégorie « ${c} » supprimée`, u); return;
+    }
     case 'filter': S.settings.filter = el.dataset.v; save(); render(false); return;
     case 'cat': S.settings.cat = el.dataset.v; save(); render(false); return;
     case 'fd': $('#taskForm [name=date]').value = el.dataset.v; return;
@@ -698,7 +805,7 @@ document.addEventListener('submit', e => {
   const f = e.target, fd = new FormData(f);
   if (f.id === 'taskForm') {
     const title = (fd.get('title') || '').trim(); if (!title) return;
-    const data = { title, cat: fd.get('cat') || 'Autre', prio: fd.get('prio') || 'yellow', note: (fd.get('note') || '').trim() };
+    const data = { title, cat: fd.get('cat') || '', prio: fd.get('prio') || 'yellow', note: (fd.get('note') || '').trim() };
     const date = fd.get('date') || null, days = +fd.get('days') || 1;
     const t = ui.cur && find(ui.cur);
     if (t) {
@@ -706,7 +813,7 @@ document.addEventListener('submit', e => {
       if (fd.has('date') && t.slots[0].d !== date) moveSlot(t, 0, date);
       setDays(t, days); closeSheet(); commit('Enregistrée');
     } else {
-      const needs = String(fd.get('needs') || '').split('\n').map(x => x.trim()).filter(Boolean).map(text => ({ id: uid(), text, ok: false }));
+      const needs = String(fd.get('needs') || '').split('\n').map(x => x.trim()).filter(Boolean).map(text => ({ id: uid(), text, cat: '', ok: false }));
       const nt = { id: uid(), ...data, status: 'todo', slots: [{ d: date, ok: false, o: date ? nextOrder(date) : 0 }], needs, created: Date.now(), block: null };
       setDays(nt, days); S.tasks.push(nt); closeSheet();
       commit(days > 1 ? `Tâche ajoutée · ${unplaced(nt)} jour(s) à placer` : 'Tâche ajoutée');
@@ -716,20 +823,37 @@ document.addEventListener('submit', e => {
     const reason = (fd.get('reason') || '').trim(); if (!reason) return;
     setStatus(t, 'blocked');
     let waitId = null;
-    if (fd.get('addWait')) { waitId = uid(); S.waits.push({ id: waitId, title: reason, date: fd.get('date') || null, taskId: t.id }); }
+    if (fd.get('addWait')) { waitId = uid(); S.waits.push({ id: waitId, title: reason, cat: fd.get('cat') || '', date: fd.get('date') || null, taskId: t.id }); }
     t.block = { reason, waitId };
     closeSheet(); commit('Tâche bloquée (violet)');
   } else if (f.id === 'wForm') {
     const title = (fd.get('title') || '').trim(); if (!title) return;
-    S.waits.push({ id: uid(), title, date: fd.get('date') || null, taskId: null });
+    S.waits.push({ id: uid(), title, cat: fd.get('cat') || '', date: fd.get('date') || null, taskId: null });
     commit('Attente ajoutée');
   } else if (f.id === 'needForm' || f.id === 'needForm2') {
     const t = find(f.id === 'needForm' ? ui.cur : fd.get('task')), text = (fd.get('text') || '').trim();
     if (!t || !text) return;
-    t.needs.push({ id: uid(), text, ok: false });
+    const cat = fd.get('cat') || '';
+    if (f.id === 'needForm') ui.needCat = cat;
+    t.needs.push({ id: uid(), text, cat, ok: false });
     commit('Besoin ajouté');
     if (f.id === 'needForm') { refreshSheet(); $('#needForm [name=text]')?.focus(); }
-    else { const sel = $('#needForm2 [name=task]'); if (sel) sel.value = t.id; $('#needForm2 [name=text]')?.focus(); }
+    else { const sel = $('#needForm2 [name=task]'); if (sel) sel.value = t.id; const cs = $('#needForm2 [name=cat]'); if (cs) cs.value = cat; $('#needForm2 [name=text]')?.focus(); }
+  } else if (f.id === 'wEdit') {
+    const w = S.waits.find(x => x.id === ui.wait), title = (fd.get('title') || '').trim(); if (!w || !title) return;
+    w.title = title; w.cat = fd.get('cat') || ''; w.date = fd.get('date') || null;
+    closeSheet(); commit('Attente modifiée');
+  } else if (f.id === 'nEdit') {
+    const nf = ui.need, tk = nf && find(nf.tid), nd = tk && tk.needs.find(x => x.id === nf.nid), text = (fd.get('text') || '').trim();
+    if (!nd || !text) return;
+    nd.text = text; nd.cat = fd.get('cat') || ''; nd.ok = !!fd.get('ok');
+    closeSheet(); commit('Besoin modifié');
+    if (nf.back) openTask(nf.back);
+  } else if (f.classList.contains('cat-add')) {
+    const k = f.dataset.kind, name = (fd.get('name') || '').trim(); if (!name) return;
+    if (S.cats[k].includes(name)) { toast('Cette catégorie existe déjà'); return; }
+    S.cats[k].push(name); commit(`Catégorie « ${name} » ajoutée`);
+    $(`.cat-add[data-kind=${k}] input`)?.focus();
   }
 });
 document.addEventListener('change', e => {
@@ -864,7 +988,7 @@ mainEl.addEventListener('contextmenu', e => { if (e.target.closest('.task')) e.p
 
 /* ---------- sauvegarde fichier ---------- */
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: 'planning', v: 2, tasks: S.tasks, waits: S.waits }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'planning', v: 3, tasks: S.tasks, waits: S.waits, cats: S.cats }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planning-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
@@ -875,7 +999,7 @@ function importData(file) {
     if (!Array.isArray(x.tasks)) throw new Error('format');
     if (!confirm(`Remplacer les données actuelles par ce fichier (${x.tasks.length} tâches) ?`)) return;
     const u = snapshot(); const m = PlanningLogic.migrate({ tasks: x.tasks, waits: x.waits || [] });
-    S.tasks = m.tasks; S.waits = m.waits; commit('Import terminé', u);
+    S.tasks = m.tasks; S.waits = m.waits; if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) S.cats[k] = x.cats[k]; fixCats(S); commit('Import terminé', u);
   }).catch(() => toast('Fichier invalide'));
 }
 
