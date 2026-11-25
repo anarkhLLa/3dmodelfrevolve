@@ -32,11 +32,15 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
-body{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+body{display:flex;flex-direction:column;height:100dvh;overflow:hidden;background:transparent}
+:root{--a-task:100%;--a-day:100%;--a-panel:100%;--a-sheet:100%}
+#wall{position:fixed;inset:-40px;z-index:-1;background:center/cover no-repeat;display:none}
+#wall.on{display:block}
+#wall::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--dim,0))}
 button{font:inherit;color:inherit}
 small,.muted{color:var(--muted)}
 
-header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
+header{background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);border-bottom:1px solid var(--line);flex:none;
   padding:calc(env(safe-area-inset-top) + 6px) 12px 8px}
 .bar{display:flex;align-items:center;gap:8px;min-height:40px}
 .bar h1{font-size:20px;margin:0;flex:1;letter-spacing:-.01em}
@@ -45,7 +49,7 @@ header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
 .seg button.on{background:var(--accent);color:#fff}
 .seg-l{font-size:13px;font-weight:600;padding:0 2px;white-space:nowrap}
 
-.waits{margin-top:8px;border-radius:12px;background:var(--surface2);font-size:13px;border:1px solid transparent}
+.waits{margin-top:8px;border-radius:12px;background:color-mix(in srgb,var(--surface2) var(--a-panel),transparent);font-size:13px;border:1px solid transparent}
 .waits.alert{background:color-mix(in srgb,var(--orange) 10%,transparent);border-color:var(--orange)}
 .waits-h{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer}
 .waits-h b{white-space:nowrap}
@@ -76,7 +80,7 @@ header{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
 .card .cat-add .btn{margin:0}
 
 main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:10px 0 96px;overscroll-behavior:contain}
-nav{display:flex;background:var(--surface);border-top:1px solid var(--line);flex:none;padding-bottom:env(safe-area-inset-bottom)}
+nav{display:flex;background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);border-top:1px solid var(--line);flex:none;padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;border:0;background:none;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px;
   font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;position:relative}
 nav button i{font-style:normal;font-size:19px;line-height:1}
@@ -108,6 +112,18 @@ nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);
 .c-blocked{background:var(--blocked);color:var(--blocked-t)}
 .c-cancel{background:var(--surface2);color:var(--muted);border-left:5px solid var(--muted)}
 .c-cancel .t-title{text-decoration:line-through}
+.task.p-red{background:color-mix(in srgb,var(--pr-red) var(--a-task),transparent)}
+.task.p-orange{background:color-mix(in srgb,var(--pr-orange) var(--a-task),transparent)}
+.task.p-yellow{background:color-mix(in srgb,var(--pr-yellow) var(--a-task),transparent)}
+.task.p-white{background:color-mix(in srgb,var(--pr-white) var(--a-task),transparent)}
+.task.rc{background:color-mix(in srgb,var(--tc) var(--a-task),transparent)}
+.task.c-done{background:color-mix(in srgb,var(--done) var(--a-task),transparent)}
+.task.c-blocked{background:color-mix(in srgb,var(--blocked) var(--a-task),transparent)}
+.task.c-cancel{background:color-mix(in srgb,var(--surface2) var(--a-task),transparent)}
+.range-row{display:grid;grid-template-columns:1fr 46px;gap:4px 10px;align-items:center;font-size:14px;margin:8px 0}
+.range-row input{grid-column:1/-1;padding:0;accent-color:var(--accent)}
+.range-row b{text-align:right;font-size:13px}
+.wall-prev{width:72px;height:96px;border-radius:10px;background:center/cover no-repeat var(--surface2);border:1px solid var(--line);flex:none}
 .c-cancel[data-p=red]{border-left-color:var(--pr-red)} .c-cancel[data-p=orange]{border-left-color:var(--pr-orange)}
 .c-cancel[data-p=yellow]{border-left-color:var(--pr-yellow)} .c-cancel[data-p=white]{border-left-color:#c9c9d2}
 .task.late{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--red)}
@@ -118,7 +134,7 @@ nav .count{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);
 /* Planning */
 .banner{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:0 8px 10px;padding:8px 10px;border-radius:12px;
   background:color-mix(in srgb,var(--red) 10%,transparent);border:1px solid var(--red);font-size:13px;font-weight:700;color:var(--red)}
-.tray{margin:0 8px 10px;background:var(--surface);border:1.5px dashed var(--line);border-radius:12px;padding:8px}
+.tray{margin:0 8px 10px;background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);border:1.5px dashed var(--line);border-radius:12px;padding:8px}
 .tray-h{display:flex;justify-content:space-between;cursor:pointer;font-size:13px}
 .tray .tasks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .tray .task{margin:0;max-width:100%}
@@ -131,11 +147,11 @@ body.dragging .board{scroll-snap-type:none}
 .week-h b{font-size:14px}
 .week-h small{font-size:11.5px}
 .week.cur .week-h b{color:var(--accent)}
-.day{--dc:#9ca3af;--dt:#1b1b1b;background:color-mix(in srgb,var(--dc) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--dc) 55%,var(--line));
+.day{--dc:#9ca3af;--dt:#1b1b1b;background:color-mix(in srgb,color-mix(in srgb,var(--dc) 12%,var(--surface)) var(--a-day),transparent);border:1px solid color-mix(in srgb,var(--dc) 55%,var(--line));
   border-radius:12px;margin-bottom:8px;overflow:hidden}
 .day.today{outline:3px solid var(--accent);outline-offset:1px}
 .day.past{opacity:.72}
-.day-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:800;background:var(--dc);color:var(--dt);padding:4px 8px}
+.day-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:800;background:color-mix(in srgb,var(--dc) var(--a-day),transparent);color:var(--dt);padding:4px 8px}
 .day.d6 .day-h{border-bottom:1px solid var(--line)}
 .half{padding:3px 6px 1px;min-height:38px}
 .half + .half{border-top:1px dashed color-mix(in srgb,var(--dc) 60%,var(--line))}
@@ -150,7 +166,7 @@ body.dragging .board{scroll-snap-type:none}
 
 /* Listes */
 .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:none}
-.chip{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);font-size:13px;font-weight:600;cursor:pointer}
+.chip{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);font-size:13px;font-weight:600;cursor:pointer}
 .chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
 .chip .n{opacity:.6;margin-left:4px}
 .search{margin:0 12px 10px}
@@ -170,7 +186,7 @@ body.dragging .board{scroll-snap-type:none}
 .need .x{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px}
 .need-add{display:flex;gap:6px;margin-top:8px}
 .need-add input{flex:1}
-.need-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px 4px;margin:0 12px 12px}
+.need-card{background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);border:1px solid var(--line);border-radius:14px;padding:10px 12px 4px;margin:0 12px 12px}
 .need-card .task{margin-bottom:4px}
 .need-card .need:last-child{border-bottom:0}
 .add-need{margin:0 12px 14px;display:grid;grid-template-columns:1fr;gap:6px}
@@ -182,7 +198,7 @@ body.dragging .board{scroll-snap-type:none}
 .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sheet.hidden{display:none}
 .sheet-bg{position:absolute;inset:0;background:#0009}
-.sheet-panel{position:relative;background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;
+.sheet-panel{position:relative;background:color-mix(in srgb,var(--surface) var(--a-sheet),transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;max-width:560px;border-radius:18px 18px 0 0;
   padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto}
 .sheet-panel.anim{animation:up .16s ease-out}
 @keyframes up{from{transform:translateY(30px);opacity:.5}}
@@ -222,7 +238,7 @@ label.chk{display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:600}
 label.chk input{width:auto}
 .date-l{display:flex;align-items:center;gap:8px;font-weight:650}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 12px 12px;padding:12px}
+.card{background:color-mix(in srgb,var(--surface) var(--a-panel),transparent);border:1px solid var(--line);border-radius:14px;margin:0 12px 12px;padding:12px}
 .card h3{margin:0 0 6px;font-size:15px}
 .card p{margin:4px 0 10px;font-size:13.5px;color:var(--muted)}
 .card .btn{margin:0 6px 6px 0}
@@ -258,6 +274,7 @@ input[type=color]{width:52px;height:36px;padding:2px;border-radius:9px;cursor:po
 <button id="fab" data-act="new" aria-label="Nouvelle tâche">+</button>
 <div id="sheet" class="sheet hidden"><div class="sheet-bg" data-act="close"></div><div class="sheet-panel" id="sheetPanel"></div></div>
 <div id="toast"></div>
+<div id="wall"></div>
 
 <script src="logic.js"></script>
 <script>
@@ -334,13 +351,13 @@ const MAX_DAYS = 14;
              slots: [{ d: 'AAAA-MM-JJ' | null, ok: bool, o: ordre }],   // un slot = une journée de travail
              needs: [{ id, text, ok }] }                                  // besoins (achats, matériel…) */
 function defaults() {
-  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), colors: JSON.parse(JSON.stringify(DEFAULT_COLORS)), settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
+  return { tasks: [], waits: [], cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), colors: JSON.parse(JSON.stringify(DEFAULT_COLORS)), look: { ...DEFAULT_LOOK }, settings: { weeks: 2, offset: 0, view: 'planning', filter: 'active', cat: '', needsF: 'todo', needsBy: 'task', trayOpen: true, waitsOpen: false, theme: 'auto' } };
 }
 function load() {
   const d = defaults();
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); }
+    if (x) { d.tasks = x.tasks || []; d.waits = x.waits || []; Object.assign(d.settings, x.settings || {}); if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) d.cats[k] = x.cats[k]; mergeColors(d, x.colors); mergeLook(d, x.look); }
   } catch (e) {}
   PlanningLogic.migrate(d);
   fixCats(d);
@@ -353,6 +370,54 @@ function mergeColors(d, c) {
   for (const k of ['done', 'blocked', 'late', 'arrive', 'accent']) if (ok(c[k])) d.colors[k] = c[k];
   if (Array.isArray(c.days) && c.days.length === 7 && c.days.every(ok)) d.colors.days = c.days;
   if (Array.isArray(c.palette) && c.palette.length && c.palette.every(ok)) d.colors.palette = c.palette;
+}
+const DEFAULT_LOOK = { task: 100, day: 100, panel: 100, dim: 25, blur: 0 };
+const WALL_KEY = 'planning.wall';
+function mergeLook(d, l) {
+  if (!l) return;
+  for (const k in DEFAULT_LOOK) if (typeof l[k] === 'number' && isFinite(l[k])) d.look[k] = l[k];
+}
+let wallData = null;
+try { wallData = localStorage.getItem(WALL_KEY); } catch (e) {}
+function applyLook() {
+  const L = S.look, st = document.documentElement.style, w = $('#wall');
+  st.setProperty('--a-task', L.task + '%');
+  st.setProperty('--a-day', L.day + '%');
+  st.setProperty('--a-panel', L.panel + '%');
+  st.setProperty('--a-sheet', Math.max(L.panel, 88) + '%');
+  w.classList.toggle('on', !!wallData);
+  w.style.backgroundImage = wallData ? `url("${wallData}")` : '';
+  w.style.filter = L.blur ? `blur(${L.blur}px)` : '';
+  w.style.setProperty('--dim', L.dim / 100);
+}
+// réduit la photo (1600 px max, JPEG) pour qu'elle tienne dans la mémoire du navigateur
+async function shrinkImage(file, max, q) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise((ok, ko) => { img.onload = ok; img.onerror = ko; img.src = url; });
+    const k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', q);
+  } finally { URL.revokeObjectURL(url); }
+}
+async function setWall(file) {
+  if (!file) return;
+  try {
+    for (const [max, q] of [[1600, 0.82], [1200, 0.72], [900, 0.65]]) {
+      const data = await shrinkImage(file, max, q);
+      try { localStorage.setItem(WALL_KEY, data); wallData = data; break; } catch (e) { /* trop gros : on réessaie plus petit */ }
+    }
+    if (!wallData) throw new Error('quota');
+    if (S.look.panel === 100 && S.look.day === 100) { S.look.panel = 80; S.look.day = 70; S.look.task = 92; }
+    commit("Fond d'écran appliqué");
+  } catch (e) { toast("Impossible d'utiliser cette image"); }
+}
+function removeWall() { try { localStorage.removeItem(WALL_KEY); } catch (e) {} wallData = null; commit("Fond d'écran retiré"); }
+function rangeRow(k, label, min, max, unit) {
+  return `<label class="range-row"><span>${label}</span><b id="rv-${k}">${S.look[k]}${unit}</b><input type="range" data-look="${k}" data-unit="${unit}" min="${min}" max="${max}" value="${S.look[k]}"></label>`;
 }
 function applyColors() {
   const C = S.colors, st = document.documentElement.style, set = (k, v) => st.setProperty(k, v);
@@ -408,7 +473,7 @@ function whenText(t) {
 /* ---------- rendu ---------- */
 function render(keepScroll = true) {
   const main = $('#main'), st = main.scrollTop, bl = $('.board')?.scrollLeft;
-  applyColors();
+  applyColors(); applyLook();
   if (S.settings.theme === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.dataset.theme = S.settings.theme;
   const v = S.settings.view;
@@ -604,6 +669,18 @@ function renderSettings() {
     <button class="btn danger" data-act="colors-reset" style="margin-top:12px">Rétablir les couleurs d'origine</button>
     <p style="margin-top:10px">Planning : <b>appui long</b> sur une tâche puis glisser pour la déplacer. <b>Toucher</b> une tâche pour la terminer, la barrer, la reporter, l'étaler sur plusieurs jours, lui ajouter des besoins ou la bloquer.<br>
     <b>j2/3</b> = 2ᵉ jour sur 3 · <b>×2</b> = 2 jours encore à placer · <b>🛒2</b> = 2 besoins à obtenir.</p></div>
+  <div class="card"><h3>🖼️ Fond d'écran et transparence</h3>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="wall-prev" style="${wallData ? `background-image:url('${wallData}')` : ''}"></div>
+      <div><label class="btn primary" style="display:inline-block">Choisir une image<input type="file" id="wallFile" accept="image/*" hidden></label>
+      ${wallData ? '<button class="btn" data-act="wall-del">Retirer</button>' : ''}
+      <p style="margin:6px 0 0">Une photo de ton téléphone. Elle est réduite automatiquement.</p></div></div>
+    ${rangeRow('dim', 'Assombrir le fond', 0, 85, '%')}
+    ${rangeRow('blur', 'Flou du fond', 0, 20, ' px')}
+    ${rangeRow('task', 'Opacité des tâches', 30, 100, '%')}
+    ${rangeRow('day', 'Opacité des cases jours', 0, 100, '%')}
+    ${rangeRow('panel', 'Opacité des panneaux (haut, bas, cartes)', 0, 100, '%')}
+    <button class="btn sm" data-act="look-reset">Opacités par défaut</button></div>
   <div class="card"><h3>🏷️ Catégories</h3>
     <p>Ajoute, renomme (✎), range (↑) ou supprime (✕) les catégories. Le chiffre indique combien d'éléments les utilisent.</p>
     ${CAT_KINDS.map(([k, l]) => catEditor(k, l)).join('')}</div>
@@ -783,7 +860,7 @@ function hslHex(h, s, l) {
   return '#' + f(0) + f(8) + f(4);
 }
 function commit(msg, undo) { save(); render(); if (msg) toast(msg, undo); }
-function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; S.cats = x.cats; S.colors = x.colors; closeSheet(); commit(); }; }
+function snapshot() { const snap = JSON.stringify({ tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors, look: S.look }); return () => { const x = JSON.parse(snap); S.tasks = x.tasks; S.waits = x.waits; S.cats = x.cats; S.colors = x.colors; S.look = x.look; closeSheet(); commit(); }; }
 function refreshSheet() { if (ui.cur && !$('#sheet').classList.contains('hidden') && $('#daysSel')) openTask(ui.cur, ui.slot, true); }
 
 function act(a, el, e) {
@@ -843,6 +920,8 @@ function act(a, el, e) {
     case 'cat': S.settings.cat = el.dataset.v; save(); render(false); return;
     case 'fd': $('#taskForm [name=date]').value = el.dataset.v; return;
     case 'theme': S.settings.theme = el.dataset.v; save(); render(); return;
+    case 'wall-del': removeWall(); return;
+    case 'look-reset': S.look = { ...DEFAULT_LOOK }; commit('Opacités par défaut'); return;
     case 'pal-add': { const h = Math.floor(Math.random() * 360); const c = hslHex(h, 65, 42); S.colors.palette.push(c); commit('Couleur ajoutée'); return; }
     case 'pal-del': { const u = snapshot(); S.colors.palette.splice(+el.dataset.i, 1); commit('Couleur retirée', u); return; }
     case 'recolor-all': { const u = snapshot(); S.tasks.forEach(x => x.color = null); S.tasks.forEach(x => x.color = pickColor(S.tasks)); commit('Couleurs redistribuées', u); return; }
@@ -958,11 +1037,18 @@ document.addEventListener('change', e => {
     ui.slot = null; refreshSheet();
   } else if (e.target.dataset && e.target.dataset.col) {
     setCol(e.target.dataset.col, e.target.value); commit();
+  } else if (e.target.dataset && e.target.dataset.look) {
+    save();
+  } else if (e.target.id === 'wallFile') { setWall(e.target.files[0]);
   } else if (e.target.id === 'importFile') importData(e.target.files[0]);
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'q') { ui.q = e.target.value; $('#taskList').innerHTML = listHTML(); }
   else if (e.target.dataset && e.target.dataset.col) { setCol(e.target.dataset.col, e.target.value); applyColors(); }
+  else if (e.target.dataset && e.target.dataset.look) {
+    const k = e.target.dataset.look; S.look[k] = +e.target.value; applyLook();
+    const b = $('#rv-' + k); if (b) b.textContent = S.look[k] + e.target.dataset.unit;
+  }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
@@ -1079,7 +1165,7 @@ mainEl.addEventListener('contextmenu', e => { if (e.target.closest('.task')) e.p
 
 /* ---------- sauvegarde fichier ---------- */
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: 'planning', v: 4, tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'planning', v: 5, tasks: S.tasks, waits: S.waits, cats: S.cats, colors: S.colors, look: S.look }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `planning-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
@@ -1090,7 +1176,7 @@ function importData(file) {
     if (!Array.isArray(x.tasks)) throw new Error('format');
     if (!confirm(`Remplacer les données actuelles par ce fichier (${x.tasks.length} tâches) ?`)) return;
     const u = snapshot(); const m = PlanningLogic.migrate({ tasks: x.tasks, waits: x.waits || [] });
-    S.tasks = m.tasks; S.waits = m.waits; if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) S.cats[k] = x.cats[k]; mergeColors(S, x.colors); fixCats(S); commit('Import terminé', u);
+    S.tasks = m.tasks; S.waits = m.waits; if (x.cats) for (const [k] of CAT_KINDS) if (Array.isArray(x.cats[k])) S.cats[k] = x.cats[k]; mergeColors(S, x.colors); mergeLook(S, x.look); fixCats(S); commit('Import terminé', u);
   }).catch(() => toast('Fichier invalide'));
 }
 
